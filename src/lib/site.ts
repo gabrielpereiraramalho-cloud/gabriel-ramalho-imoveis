@@ -6,9 +6,10 @@
 
 const onlyDigits = (v: string | undefined): string => (v ?? "").replace(/\D/g, "");
 
-/** URL base do site (sem barra final). Fallback para desenvolvimento local. */
+/** URL base do site (sem barra final). Em produção use NEXT_PUBLIC_SITE_URL;
+ *  o fallback é o domínio oficial (usado no metadataBase/Open Graph). */
 export const siteUrl = (
-  process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000"
+  process.env.NEXT_PUBLIC_SITE_URL ?? "https://gabrielramalhoimoveis.com.br"
 ).replace(/\/+$/, "");
 
 export const siteConfig = {
@@ -31,7 +32,7 @@ export function absoluteUrl(path: string): string {
 }
 
 /** Imagem Open Graph padrão do site (caminho absoluto). */
-export const defaultOgImage = absoluteUrl("/og-default.jpg");
+export const defaultOgImage = absoluteUrl("/og-default.png");
 
 /**
  * Serializa dados para JSON-LD de forma segura (escapa `<` para evitar
