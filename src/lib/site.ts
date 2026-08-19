@@ -21,6 +21,8 @@ export const siteConfig = {
   instagramUrl: process.env.NEXT_PUBLIC_INSTAGRAM_URL ?? "",
   contactEmail: process.env.NEXT_PUBLIC_CONTACT_EMAIL ?? "",
   creci: process.env.NEXT_PUBLIC_CRECI ?? "",
+  gaMeasurementId: process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID ?? "",
+  metaPixelId: process.env.NEXT_PUBLIC_META_PIXEL_ID ?? "",
 };
 
 /** Converte um caminho relativo em URL absoluta com base em siteUrl. */
