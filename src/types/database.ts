@@ -381,6 +381,14 @@ export type Database = {
           property_code: string | null;
           source: string | null;
           message: string | null;
+          lead_type: string | null;
+          property_type: string | null;
+          city: string | null;
+          neighborhood: string | null;
+          estimated_value: number | null;
+          bedrooms: number | null;
+          area: number | null;
+          status: string;
           created_at: Timestamp;
         };
         Insert: {
@@ -392,6 +400,14 @@ export type Database = {
           property_code?: string | null;
           source?: string | null;
           message?: string | null;
+          lead_type?: string | null;
+          property_type?: string | null;
+          city?: string | null;
+          neighborhood?: string | null;
+          estimated_value?: number | null;
+          bedrooms?: number | null;
+          area?: number | null;
+          status?: string;
           created_at?: Timestamp;
         };
         Update: {
@@ -403,6 +419,14 @@ export type Database = {
           property_code?: string | null;
           source?: string | null;
           message?: string | null;
+          lead_type?: string | null;
+          property_type?: string | null;
+          city?: string | null;
+          neighborhood?: string | null;
+          estimated_value?: number | null;
+          bedrooms?: number | null;
+          area?: number | null;
+          status?: string;
           created_at?: Timestamp;
         };
         Relationships: [

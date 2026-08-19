@@ -12,7 +12,8 @@ export type WhatsAppSource =
   | "hero"
   | "about"
   | "sell_cta"
-  | "footer";
+  | "footer"
+  | "owner_lead_success";
 
 /** Dados públicos do imóvel usados nos eventos (nenhum dado pessoal). */
 export type TrackedProperty = {
@@ -85,4 +86,25 @@ export function trackPropertyInterest(p: TrackedProperty): void {
 export function trackWhatsAppClick(source: WhatsAppSource): void {
   trackGAEvent("whatsapp_click", { source });
   trackMetaEvent("Contact", {});
+}
+
+/**
+ * Lead de proprietário enviado: GA `generate_lead` + Meta `Lead`.
+ * Somente dados não pessoais (tipo do imóvel, cidade, bairro).
+ */
+export function trackOwnerLead(p: {
+  propertyType: string;
+  city: string;
+  neighborhood: string;
+}): void {
+  trackGAEvent("generate_lead", {
+    lead_type: "owner_property_submission",
+    property_type: p.propertyType,
+    city: p.city,
+    neighborhood: p.neighborhood,
+  });
+  trackMetaEvent("Lead", {
+    content_name: "owner_property_submission",
+    content_category: p.propertyType,
+  });
 }
