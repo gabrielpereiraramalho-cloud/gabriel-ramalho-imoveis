@@ -1,0 +1,20 @@
+# Configuração do Supabase CLI para o projeto Gabriel Ramalho Imóveis.
+# O project_id identifica a stack local; ajuste ao vincular ao projeto remoto.
+project_id = "gabriel-ramalho-imoveis"
+
+[db]
+# Porta do Postgres local (supabase start). Versão principal do PostgreSQL.
+port = 54322
+major_version = 17
+
+[db.seed]
+# Executa supabase/seed.sql ao rodar `supabase db reset`.
+enabled = true
+sql_paths = ["./seed.sql"]
+
+[storage]
+enabled = true
+
+# Bucket das imagens dos imóveis (também garantido via migration).
+[storage.buckets.property-images]
+public = true
