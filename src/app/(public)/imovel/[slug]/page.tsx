@@ -25,6 +25,8 @@ import { PropertyLocation } from "@/components/property-location";
 import { PropertyPrice } from "@/components/property-price";
 import { PropertyWhatsappCta } from "@/components/property-whatsapp-cta";
 import { PropertyMobileCta } from "@/components/property-mobile-cta";
+import { PropertyViewTracker } from "@/components/property-view-tracker";
+import type { TrackedProperty } from "@/lib/analytics/events";
 
 type Params = { params: Promise<{ slug: string }> };
 
@@ -197,12 +199,25 @@ export default async function ImovelPage({ params }: Params) {
     { label: "Tour virtual", url: property.virtualTourUrl },
   ].filter((v): v is { label: string; url: string } => Boolean(v.url));
 
+  const trackedProperty: TrackedProperty = {
+    id: property.id,
+    code: property.code,
+    slug: property.slug,
+    title: property.title,
+    propertyType: property.propertyType,
+    purpose: property.purpose,
+    cityName: property.cityName,
+    neighborhoodName: property.neighborhoodName,
+    price: property.purpose === "sale" ? property.salePrice : property.rentPrice,
+  };
+
   return (
     <main className="mx-auto flex w-full max-w-7xl flex-1 flex-col gap-10 px-4 py-10">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: jsonLdScript(propertyJsonLd(property)) }}
       />
+      <PropertyViewTracker property={trackedProperty} />
       {/* Cabeçalho */}
       <header className="flex flex-col gap-2">
         <div className="flex flex-wrap items-center gap-2">
@@ -301,10 +316,7 @@ export default async function ImovelPage({ params }: Params) {
               className="text-xl font-semibold text-brand-navy"
             />
             <p className="text-sm text-zinc-500">Código: {property.code}</p>
-            <PropertyWhatsappCta
-              title={property.title}
-              code={property.code}
-            />
+            <PropertyWhatsappCta property={trackedProperty} />
           </div>
         </aside>
       </div>
@@ -326,13 +338,7 @@ export default async function ImovelPage({ params }: Params) {
       {/* Espaçador para a barra fixa não cobrir o conteúdo no mobile */}
       <div className="h-16 lg:hidden" aria-hidden="true" />
 
-      <PropertyMobileCta
-        title={property.title}
-        code={property.code}
-        purpose={property.purpose}
-        salePrice={property.salePrice}
-        rentPrice={property.rentPrice}
-      />
+      <PropertyMobileCta property={trackedProperty} />
     </main>
   );
 }

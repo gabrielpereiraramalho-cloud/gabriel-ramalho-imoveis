@@ -1,4 +1,5 @@
 import { siteConfig, whatsappUrl } from "@/lib/site";
+import { WhatsAppLink } from "@/components/whatsapp-link";
 
 export function SellCta() {
   const wa = whatsappUrl(
@@ -18,14 +19,13 @@ export function SellCta() {
           </p>
         </div>
         {wa ? (
-          <a
+          <WhatsAppLink
             href={wa}
-            target="_blank"
-            rel="noopener noreferrer"
+            source="sell_cta"
             className="shrink-0 rounded-full bg-brand-gold px-6 py-3 text-sm font-semibold text-brand-navy-dark transition-colors hover:bg-brand-gold-light"
           >
             Quero anunciar meu imóvel
-          </a>
+          </WhatsAppLink>
         ) : null}
       </div>
     </section>

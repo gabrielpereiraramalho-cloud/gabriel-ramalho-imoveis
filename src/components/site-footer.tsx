@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import { siteConfig, whatsappUrl } from "@/lib/site";
+import { WhatsAppLink } from "@/components/whatsapp-link";
 
 const NAV_LINKS: { label: string; href: string }[] = [
   { label: "Início", href: "/" },
@@ -65,17 +66,30 @@ export function SiteFooter() {
             <span className="text-xs font-semibold uppercase tracking-widest text-offwhite/60">
               Contato
             </span>
-            {contacts.map((c) => (
-              <a
-                key={c.label}
-                href={c.href}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-sm text-offwhite/85 transition-colors hover:text-white"
-              >
-                {c.label}
-              </a>
-            ))}
+            {contacts.map((c) => {
+              const cls =
+                "text-sm text-offwhite/85 transition-colors hover:text-white";
+              return c.label === "WhatsApp" ? (
+                <WhatsAppLink
+                  key={c.label}
+                  href={c.href}
+                  source="footer"
+                  className={cls}
+                >
+                  {c.label}
+                </WhatsAppLink>
+              ) : (
+                <a
+                  key={c.label}
+                  href={c.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={cls}
+                >
+                  {c.label}
+                </a>
+              );
+            })}
           </div>
         ) : null}
       </div>

@@ -1,29 +1,33 @@
-import type { PropertyPurpose } from "@/types/database";
+"use client";
+
 import { siteConfig, whatsappUrl } from "@/lib/site";
-import { PropertyPrice } from "./property-price";
+import { formatBRL } from "@/lib/properties/format";
+import {
+  trackPropertyInterest,
+  type TrackedProperty,
+} from "@/lib/analytics/events";
 
 /**
- * Barra fixa no rodapé da viewport (somente mobile) com preço + CTA WhatsApp.
+ * Barra fixa no rodapé da viewport (somente mobile) com preço + CTA de
+ * interesse. Dispara `property_interest` (GA) + `Contact` (Meta) ao clicar.
  * Renderiza apenas se NEXT_PUBLIC_WHATSAPP_NUMBER estiver configurado.
- * O padding-bottom respeita a área segura do navegador.
  */
 export function PropertyMobileCta({
-  title,
-  code,
-  purpose,
-  salePrice,
-  rentPrice,
+  property,
 }: {
-  title: string;
-  code: string;
-  purpose: PropertyPurpose;
-  salePrice: number | null;
-  rentPrice: number | null;
+  property: TrackedProperty;
 }) {
   const href = whatsappUrl(
-    `Olá, ${siteConfig.brand}! Vi o imóvel ${title} - código ${code} no seu site e gostaria de mais informações.`,
+    `Olá, ${siteConfig.brand}! Vi o imóvel ${property.title} - código ${property.code} no seu site e gostaria de mais informações.`,
   );
   if (!href) return null;
+
+  const priceLabel =
+    property.price === null
+      ? "Consulte"
+      : property.purpose === "rent"
+        ? `${formatBRL(property.price)}/mês`
+        : formatBRL(property.price);
 
   return (
     <div
@@ -33,16 +37,14 @@ export function PropertyMobileCta({
       }}
     >
       <div className="mx-auto flex max-w-7xl items-center justify-between gap-3 px-4 pt-2.5">
-        <PropertyPrice
-          purpose={purpose}
-          salePrice={salePrice}
-          rentPrice={rentPrice}
-          className="text-lg font-semibold text-brand-navy"
-        />
+        <span className="text-lg font-semibold text-brand-navy">
+          {priceLabel}
+        </span>
         <a
           href={href}
           target="_blank"
           rel="noopener noreferrer"
+          onClick={() => trackPropertyInterest(property)}
           className="shrink-0 rounded-md bg-brand-gold px-5 py-2.5 text-sm font-semibold text-brand-navy-dark transition-colors hover:bg-brand-gold-light"
         >
           Tenho interesse

@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 
 import { siteConfig, whatsappUrl } from "@/lib/site";
+import { WhatsAppLink } from "@/components/whatsapp-link";
 
 export function AboutSection() {
   const wa = whatsappUrl(
@@ -46,14 +47,13 @@ export function AboutSection() {
           </p>
           <div className="mt-2 flex flex-wrap gap-3">
             {wa ? (
-              <a
+              <WhatsAppLink
                 href={wa}
-                target="_blank"
-                rel="noopener noreferrer"
+                source="about"
                 className="rounded-md bg-brand-navy px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-brand-navy-dark"
               >
                 Falar com Gabriel
-              </a>
+              </WhatsAppLink>
             ) : null}
             <Link
               href="/imoveis"

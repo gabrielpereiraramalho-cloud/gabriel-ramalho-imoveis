@@ -7,6 +7,7 @@ import type {
 } from "@/lib/properties/queries";
 import { siteConfig, whatsappUrl } from "@/lib/site";
 import { HeroSearch } from "@/components/hero-search";
+import { WhatsAppLink } from "@/components/whatsapp-link";
 
 export function Hero({
   cities,
@@ -45,14 +46,13 @@ export function Hero({
                 Ver imóveis
               </Link>
               {wa ? (
-                <a
+                <WhatsAppLink
                   href={wa}
-                  target="_blank"
-                  rel="noopener noreferrer"
+                  source="hero"
                   className="rounded-md border border-brand-navy/25 px-6 py-3 text-sm font-semibold text-brand-navy transition-colors hover:bg-brand-navy hover:text-white"
                 >
                   Falar com Gabriel
-                </a>
+                </WhatsAppLink>
               ) : null}
             </div>
           </div>

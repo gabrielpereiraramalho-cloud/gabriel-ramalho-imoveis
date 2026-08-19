@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useState } from "react";
 
 import { siteConfig, whatsappUrl } from "@/lib/site";
+import { trackWhatsAppClick } from "@/lib/analytics/events";
 
 const NAV_LINKS: { label: string; href: string }[] = [
   { label: "Início", href: "/" },
@@ -77,6 +78,7 @@ export function SiteHeader() {
               href={wa}
               target="_blank"
               rel="noopener noreferrer"
+              onClick={() => trackWhatsAppClick("header")}
               className="hidden rounded-full bg-brand-navy px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-brand-navy-dark sm:inline-flex"
             >
               Falar no WhatsApp
@@ -129,7 +131,10 @@ export function SiteHeader() {
                   href={wa}
                   target="_blank"
                   rel="noopener noreferrer"
-                  onClick={() => setOpen(false)}
+                  onClick={() => {
+                    trackWhatsAppClick("header");
+                    setOpen(false);
+                  }}
                   className="mt-2 inline-flex rounded-full bg-brand-navy px-4 py-2 text-sm font-medium text-white"
                 >
                   Falar no WhatsApp
