@@ -3,8 +3,7 @@ import { loadPropertyFormRefs } from "../data";
 import { PropertyForm } from "../property-form";
 
 export default async function NovoImovelPage() {
-  const { cities, neighborhoods, features, partners } =
-    await loadPropertyFormRefs();
+  const { features, partners } = await loadPropertyFormRefs();
 
   return (
     <main className="flex flex-1 flex-col gap-6 p-8">
@@ -12,8 +11,6 @@ export default async function NovoImovelPage() {
       <PropertyForm
         action={createProperty}
         submitLabel="Criar imóvel"
-        cities={cities}
-        neighborhoods={neighborhoods}
         features={features}
         partners={partners}
       />

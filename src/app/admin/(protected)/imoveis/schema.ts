@@ -54,6 +54,8 @@ export type PropertyFormState = {
 export type ParsedProperty = {
   values: TablesInsert<"properties">;
   featureIds: string[];
+  cityText: string | null;
+  neighborhoodText: string | null;
   fieldErrors: Record<string, string>;
 };
 
@@ -175,9 +177,8 @@ export function parsePropertyForm(formData: FormData): ParsedProperty {
     iptu: optDecimal("iptu", "IPTU"),
     accepts_financing: bool("accepts_financing"),
 
-    // Localização
-    city_id: strOrNull("city_id"),
-    neighborhood_id: strOrNull("neighborhood_id"),
+    // Localização (city_id/neighborhood_id são resolvidos na Server Action a
+    // partir dos textos livres de cidade/bairro — ver actions.ts)
     address: strOrNull("address"),
     address_number: strOrNull("address_number"),
     complement: strOrNull("complement"),
@@ -214,5 +215,11 @@ export function parsePropertyForm(formData: FormData): ParsedProperty {
     .getAll("features")
     .filter((v): v is string => typeof v === "string" && v !== "");
 
-  return { values, featureIds, fieldErrors };
+  return {
+    values,
+    featureIds,
+    cityText: strOrNull("city"),
+    neighborhoodText: strOrNull("neighborhood"),
+    fieldErrors,
+  };
 }

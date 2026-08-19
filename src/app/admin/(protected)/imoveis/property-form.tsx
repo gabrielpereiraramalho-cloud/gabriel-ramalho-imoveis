@@ -13,9 +13,9 @@ import {
   STATUS_LABELS,
   type PropertyFormState,
 } from "./schema";
+import { CurrencyInput } from "./currency-input";
 
 type Option = { id: string; name: string };
-type NeighborhoodOption = { id: string; name: string; city_id: string | null };
 type FeatureOption = { id: string; name: string; category: string | null };
 
 type Props = {
@@ -24,11 +24,11 @@ type Props = {
     formData: FormData,
   ) => Promise<PropertyFormState>;
   submitLabel: string;
-  cities: Option[];
-  neighborhoods: NeighborhoodOption[];
   features: FeatureOption[];
   partners: Option[];
   initial?: Partial<Tables<"properties">>;
+  initialCity?: string;
+  initialNeighborhood?: string;
   selectedFeatureIds?: string[];
 };
 
@@ -44,11 +44,11 @@ const fieldsetCls =
 export function PropertyForm({
   action,
   submitLabel,
-  cities,
-  neighborhoods,
   features,
   partners,
   initial,
+  initialCity,
+  initialNeighborhood,
   selectedFeatureIds,
 }: Props) {
   const [state, formAction, pending] = useActionState(action, {});
@@ -58,15 +58,8 @@ export function PropertyForm({
   const [title, setTitle] = useState<string>(dv(init.title));
   const [slug, setSlug] = useState<string>(dv(init.slug));
   const [slugTouched, setSlugTouched] = useState<boolean>(Boolean(init.slug));
-  const [cityId, setCityId] = useState<string>(dv(init.city_id));
-  const [neighborhoodId, setNeighborhoodId] = useState<string>(
-    dv(init.neighborhood_id),
-  );
 
   const selected = new Set(selectedFeatureIds ?? []);
-  const filteredNeighborhoods = neighborhoods.filter(
-    (n) => n.city_id === cityId,
-  );
 
   const renderError = (name: string) =>
     fe[name] ? (
@@ -235,13 +228,10 @@ export function PropertyForm({
             <label htmlFor="sale_price" className="text-sm font-medium">
               Preço de venda
             </label>
-            <input
+            <CurrencyInput
               id="sale_price"
               name="sale_price"
-              type="number"
-              step="0.01"
-              min="0"
-              defaultValue={dv(init.sale_price)}
+              defaultValue={init.sale_price}
               className={inputCls}
             />
             {renderError("sale_price")}
@@ -250,13 +240,10 @@ export function PropertyForm({
             <label htmlFor="rent_price" className="text-sm font-medium">
               Preço de aluguel
             </label>
-            <input
+            <CurrencyInput
               id="rent_price"
               name="rent_price"
-              type="number"
-              step="0.01"
-              min="0"
-              defaultValue={dv(init.rent_price)}
+              defaultValue={init.rent_price}
               className={inputCls}
             />
             {renderError("rent_price")}
@@ -265,13 +252,10 @@ export function PropertyForm({
             <label htmlFor="condominium_fee" className="text-sm font-medium">
               Condomínio
             </label>
-            <input
+            <CurrencyInput
               id="condominium_fee"
               name="condominium_fee"
-              type="number"
-              step="0.01"
-              min="0"
-              defaultValue={dv(init.condominium_fee)}
+              defaultValue={init.condominium_fee}
               className={inputCls}
             />
             {renderError("condominium_fee")}
@@ -280,13 +264,10 @@ export function PropertyForm({
             <label htmlFor="iptu" className="text-sm font-medium">
               IPTU
             </label>
-            <input
+            <CurrencyInput
               id="iptu"
               name="iptu"
-              type="number"
-              step="0.01"
-              min="0"
-              defaultValue={dv(init.iptu)}
+              defaultValue={init.iptu}
               className={inputCls}
             />
             {renderError("iptu")}
@@ -307,48 +288,30 @@ export function PropertyForm({
         <legend className={legendCls}>Localização</legend>
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="flex flex-col gap-1">
-            <label htmlFor="city_id" className="text-sm font-medium">
+            <label htmlFor="city" className="text-sm font-medium">
               Cidade
             </label>
-            <select
-              id="city_id"
-              name="city_id"
-              value={cityId}
-              onChange={(e) => {
-                setCityId(e.target.value);
-                setNeighborhoodId("");
-              }}
+            <input
+              id="city"
+              name="city"
+              defaultValue={initialCity ?? ""}
+              placeholder="Ex.: Conde"
               className={inputCls}
-            >
-              <option value="">Selecione...</option>
-              {cities.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.name}
-                </option>
-              ))}
-            </select>
+            />
+            {renderError("city")}
           </div>
           <div className="flex flex-col gap-1">
-            <label htmlFor="neighborhood_id" className="text-sm font-medium">
+            <label htmlFor="neighborhood" className="text-sm font-medium">
               Bairro
             </label>
-            <select
-              id="neighborhood_id"
-              name="neighborhood_id"
-              value={neighborhoodId}
-              onChange={(e) => setNeighborhoodId(e.target.value)}
-              disabled={!cityId}
+            <input
+              id="neighborhood"
+              name="neighborhood"
+              defaultValue={initialNeighborhood ?? ""}
+              placeholder="Ex.: Jacumã"
               className={inputCls}
-            >
-              <option value="">
-                {cityId ? "Selecione..." : "Selecione a cidade primeiro"}
-              </option>
-              {filteredNeighborhoods.map((n) => (
-                <option key={n.id} value={n.id}>
-                  {n.name}
-                </option>
-              ))}
-            </select>
+            />
+            {renderError("neighborhood")}
           </div>
           <div className="flex flex-col gap-1">
             <label htmlFor="address" className="text-sm font-medium">

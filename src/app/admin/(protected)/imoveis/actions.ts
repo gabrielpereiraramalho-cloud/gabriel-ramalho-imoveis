@@ -6,10 +6,67 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
+import { slugify } from "@/lib/slug";
 import { parsePropertyForm, type PropertyFormState } from "./schema";
 import type { Database } from "@/types/database";
 
 type Supabase = SupabaseClient<Database>;
+
+/**
+ * Resolve cidade/bairro (texto livre) para os FKs, criando os registros em
+ * cities/neighborhoods quando ainda não existirem (find-or-create). Mantém o
+ * schema e os filtros públicos, que consultam essas tabelas. Estado padrão
+ * "PB" para cidades novas (atuação em João Pessoa e região).
+ */
+async function resolveLocation(
+  supabase: Supabase,
+  cityText: string | null,
+  neighborhoodText: string | null,
+): Promise<{ city_id: string | null; neighborhood_id: string | null }> {
+  let city_id: string | null = null;
+  let neighborhood_id: string | null = null;
+
+  if (cityText) {
+    const citySlug = slugify(cityText);
+    const { data: existing } = await supabase
+      .from("cities")
+      .select("id")
+      .eq("slug", citySlug)
+      .maybeSingle();
+    if (existing) {
+      city_id = existing.id;
+    } else {
+      const { data: created } = await supabase
+        .from("cities")
+        .insert({ name: cityText, slug: citySlug, state: "PB" })
+        .select("id")
+        .single();
+      city_id = created?.id ?? null;
+    }
+  }
+
+  if (neighborhoodText && city_id) {
+    const nSlug = slugify(neighborhoodText);
+    const { data: existing } = await supabase
+      .from("neighborhoods")
+      .select("id")
+      .eq("city_id", city_id)
+      .eq("slug", nSlug)
+      .maybeSingle();
+    if (existing) {
+      neighborhood_id = existing.id;
+    } else {
+      const { data: created } = await supabase
+        .from("neighborhoods")
+        .insert({ city_id, name: neighborhoodText, slug: nSlug })
+        .select("id")
+        .single();
+      neighborhood_id = created?.id ?? null;
+    }
+  }
+
+  return { city_id, neighborhood_id };
+}
 
 /** Verifica duplicidade de código/slug (opcionalmente ignorando um id). */
 async function findDuplicates(
@@ -70,7 +127,8 @@ export async function createProperty(
   _prevState: PropertyFormState,
   formData: FormData,
 ): Promise<PropertyFormState> {
-  const { values, featureIds, fieldErrors } = parsePropertyForm(formData);
+  const { values, featureIds, cityText, neighborhoodText, fieldErrors } =
+    parsePropertyForm(formData);
   if (Object.keys(fieldErrors).length > 0) {
     return { error: "Corrija os campos destacados.", fieldErrors };
   }
@@ -81,6 +139,10 @@ export async function createProperty(
   if (duplicates) {
     return { error: "Corrija os campos destacados.", fieldErrors: duplicates };
   }
+
+  const location = await resolveLocation(supabase, cityText, neighborhoodText);
+  values.city_id = location.city_id;
+  values.neighborhood_id = location.neighborhood_id;
 
   // Publicação: marcado define published_at = now(); desmarcado mantém null.
   values.published_at =
@@ -112,7 +174,8 @@ export async function updateProperty(
   _prevState: PropertyFormState,
   formData: FormData,
 ): Promise<PropertyFormState> {
-  const { values, featureIds, fieldErrors } = parsePropertyForm(formData);
+  const { values, featureIds, cityText, neighborhoodText, fieldErrors } =
+    parsePropertyForm(formData);
   if (Object.keys(fieldErrors).length > 0) {
     return { error: "Corrija os campos destacados.", fieldErrors };
   }
@@ -128,6 +191,10 @@ export async function updateProperty(
   if (duplicates) {
     return { error: "Corrija os campos destacados.", fieldErrors: duplicates };
   }
+
+  const location = await resolveLocation(supabase, cityText, neighborhoodText);
+  values.city_id = location.city_id;
+  values.neighborhood_id = location.neighborhood_id;
 
   // Publicação: preserva o timestamp original quando já publicado.
   if (formData.get("published") === "on") {

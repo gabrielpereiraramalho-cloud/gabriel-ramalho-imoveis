@@ -32,8 +32,23 @@ export default async function EditarImovelPage({
 
   const selectedFeatureIds = (propertyFeatures ?? []).map((r) => r.feature_id);
 
-  const { cities, neighborhoods, features, partners } =
-    await loadPropertyFormRefs();
+  const { features, partners } = await loadPropertyFormRefs();
+
+  // Cidade/bairro são texto livre no formulário: carrega os nomes atuais.
+  const [cityRes, neighborhoodRes] = await Promise.all([
+    property.city_id
+      ? supabase.from("cities").select("name").eq("id", property.city_id).maybeSingle()
+      : Promise.resolve({ data: null }),
+    property.neighborhood_id
+      ? supabase
+          .from("neighborhoods")
+          .select("name")
+          .eq("id", property.neighborhood_id)
+          .maybeSingle()
+      : Promise.resolve({ data: null }),
+  ]);
+  const initialCity = cityRes.data?.name ?? "";
+  const initialNeighborhood = neighborhoodRes.data?.name ?? "";
 
   const images = await getOrderedImages(supabase, id);
 
@@ -47,11 +62,11 @@ export default async function EditarImovelPage({
       <PropertyForm
         action={action}
         submitLabel="Salvar alterações"
-        cities={cities}
-        neighborhoods={neighborhoods}
         features={features}
         partners={partners}
         initial={property}
+        initialCity={initialCity}
+        initialNeighborhood={initialNeighborhood}
         selectedFeatureIds={selectedFeatureIds}
       />
       <PropertyImagesManager propertyId={id} initialImages={images} />
