@@ -3,6 +3,8 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { leadTypeLabel, ownerLeadWhatsappUrl } from "@/lib/leads";
 import { LeadStatusSelect } from "./lead-status-select";
+import { DeleteLeadButton } from "./delete-lead-button";
+import { deleteLead } from "./actions";
 
 const brl = new Intl.NumberFormat("pt-BR", {
   style: "currency",
@@ -105,6 +107,9 @@ export default async function LeadsPage() {
                             WhatsApp
                           </a>
                         ) : null}
+                        <DeleteLeadButton
+                          action={deleteLead.bind(null, lead.id)}
+                        />
                       </div>
                     </td>
                   </tr>

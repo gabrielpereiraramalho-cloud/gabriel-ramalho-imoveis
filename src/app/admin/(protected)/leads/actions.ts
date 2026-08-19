@@ -12,3 +12,10 @@ export async function setLeadStatus(id: string, status: string): Promise<void> {
   revalidatePath("/admin/leads");
   revalidatePath(`/admin/leads/${id}`);
 }
+
+/** Exclui um lead (somente admin autenticado; RLS leads_admin_all). */
+export async function deleteLead(id: string): Promise<void> {
+  const supabase = await createClient();
+  await supabase.from("leads").delete().eq("id", id);
+  revalidatePath("/admin/leads");
+}
