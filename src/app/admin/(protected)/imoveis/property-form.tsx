@@ -295,7 +295,7 @@ export function PropertyForm({
               id="city"
               name="city"
               defaultValue={initialCity ?? ""}
-              placeholder="Ex.: Conde"
+              placeholder="Ex.: João Pessoa"
               className={inputCls}
             />
             {renderError("city")}
@@ -308,7 +308,7 @@ export function PropertyForm({
               id="neighborhood"
               name="neighborhood"
               defaultValue={initialNeighborhood ?? ""}
-              placeholder="Ex.: Jacumã"
+              placeholder="Ex.: Bessa"
               className={inputCls}
             />
             {renderError("neighborhood")}
