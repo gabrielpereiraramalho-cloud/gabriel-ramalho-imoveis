@@ -8,13 +8,14 @@ import type {
   FeatureOption,
   NeighborhoodOption,
 } from "@/lib/properties/queries";
+import { MultiSelectFilter } from "@/components/multi-select-filter";
 
 export type PropertyFiltersValues = {
   q: string;
   finalidade: string;
   tipo: string;
-  cidade: string;
-  bairro: string;
+  cidade: string[];
+  bairro: string[];
   min: string;
   max: string;
   quartos: string;
@@ -45,13 +46,6 @@ export function PropertyFilters({
   values,
 }: Props) {
   const [open, setOpen] = useState(false);
-  const [citySlug, setCitySlug] = useState(values.cidade);
-  const [neighborhoodSlug, setNeighborhoodSlug] = useState(values.bairro);
-
-  const selectedCity = cities.find((c) => c.slug === citySlug);
-  const visibleNeighborhoods = selectedCity
-    ? neighborhoods.filter((n) => n.city_id === selectedCity.id)
-    : neighborhoods;
 
   const selectedFeatures = new Set(values.features);
 
@@ -134,48 +128,24 @@ export function PropertyFilters({
             </select>
           </div>
 
-          <div className="flex flex-col gap-1">
-            <label htmlFor="cidade" className={labelCls}>
-              Cidade
-            </label>
-            <select
-              id="cidade"
-              name="cidade"
-              value={citySlug}
-              onChange={(e) => {
-                setCitySlug(e.target.value);
-                setNeighborhoodSlug("");
-              }}
-              className={inputCls}
-            >
-              <option value="">Todas</option>
-              {cities.map((c) => (
-                <option key={c.id} value={c.slug}>
-                  {c.name}
-                </option>
-              ))}
-            </select>
-          </div>
+          <MultiSelectFilter
+            name="cidade"
+            label="Cidade"
+            placeholder="Todas"
+            initial={values.cidade}
+            options={cities.map((c) => ({ value: c.slug, label: c.name }))}
+          />
 
-          <div className="flex flex-col gap-1">
-            <label htmlFor="bairro" className={labelCls}>
-              Bairro
-            </label>
-            <select
-              id="bairro"
-              name="bairro"
-              value={neighborhoodSlug}
-              onChange={(e) => setNeighborhoodSlug(e.target.value)}
-              className={inputCls}
-            >
-              <option value="">Todos</option>
-              {visibleNeighborhoods.map((n) => (
-                <option key={n.id} value={n.slug}>
-                  {n.name}
-                </option>
-              ))}
-            </select>
-          </div>
+          <MultiSelectFilter
+            name="bairro"
+            label="Bairro"
+            placeholder="Todos"
+            initial={values.bairro}
+            options={neighborhoods.map((n) => ({
+              value: n.slug,
+              label: n.name,
+            }))}
+          />
 
           <div className="flex flex-col gap-1">
             <label htmlFor="min" className={labelCls}>

@@ -4,19 +4,23 @@ import Link from "next/link";
 import type {
   CityOption,
   NeighborhoodOption,
+  PropertyCard,
 } from "@/lib/properties/queries";
 import { siteConfig, whatsappUrl } from "@/lib/site";
 import { HeroSearch } from "@/components/hero-search";
 import { WhatsAppLink } from "@/components/whatsapp-link";
+import { HeroShowcase } from "@/components/home/hero-showcase";
 
 export function Hero({
   cities,
   neighborhoods,
   types,
+  featured = [],
 }: {
   cities: CityOption[];
   neighborhoods: NeighborhoodOption[];
   types: string[];
+  featured?: PropertyCard[];
 }) {
   const wa = whatsappUrl(
     `Olá, ${siteConfig.brand}! Gostaria de falar sobre imóveis.`,
@@ -57,10 +61,14 @@ export function Hero({
             </div>
           </div>
 
-          {/* Imagem premium (com fallback sofisticado) */}
-          <div className="relative aspect-[4/3] w-full overflow-hidden rounded-lg ring-1 ring-brand-navy/10 lg:aspect-[5/4]">
-            <HeroImage />
-          </div>
+          {/* Vitrine de imóveis em destaque (fallback: painel de imagem) */}
+          {featured.length > 0 ? (
+            <HeroShowcase items={featured} />
+          ) : (
+            <div className="relative aspect-[4/3] w-full overflow-hidden rounded-lg ring-1 ring-brand-navy/10 lg:aspect-[5/4]">
+              <HeroImage />
+            </div>
+          )}
         </div>
 
         {/* Busca — barra horizontal elegante na base do Hero */}

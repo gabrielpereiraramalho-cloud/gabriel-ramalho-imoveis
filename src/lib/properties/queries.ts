@@ -37,7 +37,11 @@ export type PropertyCard = {
 };
 
 export type PropertyImage = { url: string; alt: string };
-export type PropertyFeature = { name: string; category: string | null };
+export type PropertyFeature = {
+  name: string;
+  slug: string;
+  category: string | null;
+};
 
 export type PropertyDetail = {
   id: string;
@@ -131,13 +135,15 @@ type RawDetailRow = RawCardRow & {
   youtube_url: string | null;
   instagram_url: string | null;
   virtual_tour_url: string | null;
-  property_features: { features: { name: string; category: string | null } | null }[];
+  property_features: {
+    features: { name: string; slug: string; category: string | null } | null;
+  }[];
 };
 
 const CARD_COLUMNS =
   "id, slug, title, tag, purpose, status, sale_price, rent_price, private_area, bedrooms, suites, parking_spaces, neighborhood_id, cities(name, state), neighborhoods(name), property_images(storage_path, alt_text, sort_order, is_cover)";
 
-const DETAIL_COLUMNS = `${CARD_COLUMNS}, code, description, property_type, condominium_fee, iptu, accepts_financing, total_area, external_area, bathrooms, floor, solar_position, address, address_number, complement, postal_code, show_exact_address, youtube_url, instagram_url, virtual_tour_url, property_features(features(name, category))`;
+const DETAIL_COLUMNS = `${CARD_COLUMNS}, code, description, property_type, condominium_fee, iptu, accepts_financing, total_area, external_area, bathrooms, floor, solar_position, address, address_number, complement, postal_code, show_exact_address, youtube_url, instagram_url, virtual_tour_url, property_features(features(name, slug, category))`;
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -190,8 +196,8 @@ export type PropertySearchFilters = {
   q?: string;
   purpose?: PropertyPurpose;
   type?: string;
-  citySlug?: string;
-  neighborhoodSlug?: string;
+  citySlugs?: string[];
+  neighborhoodSlugs?: string[];
   minPrice?: number;
   maxPrice?: number;
   minBedrooms?: number;
@@ -259,25 +265,22 @@ export async function listPublicProperties(
     if (featurePropertyIds.length === 0) return [];
   }
 
-  // Resolve slugs de cidade/bairro para ids.
-  let cityId: string | null = null;
-  if (filters.citySlug) {
-    const { data: city } = await supabase
+  // Resolve slugs de cidade/bairro para ids (OR dentro de cada grupo via .in).
+  let cityIds: string[] | null = null;
+  if (filters.citySlugs && filters.citySlugs.length > 0) {
+    const { data: found } = await supabase
       .from("cities")
       .select("id")
-      .eq("slug", filters.citySlug)
-      .maybeSingle();
-    if (!city) return [];
-    cityId = city.id;
+      .in("slug", filters.citySlugs);
+    cityIds = (found ?? []).map((c) => c.id);
+    if (cityIds.length === 0) return [];
   }
   let neighborhoodIds: string[] | null = null;
-  if (filters.neighborhoodSlug) {
-    let nQuery = supabase
+  if (filters.neighborhoodSlugs && filters.neighborhoodSlugs.length > 0) {
+    const { data: nbs } = await supabase
       .from("neighborhoods")
       .select("id")
-      .eq("slug", filters.neighborhoodSlug);
-    if (cityId) nQuery = nQuery.eq("city_id", cityId);
-    const { data: nbs } = await nQuery;
+      .in("slug", filters.neighborhoodSlugs);
     neighborhoodIds = (nbs ?? []).map((n) => n.id);
     if (neighborhoodIds.length === 0) return [];
   }
@@ -291,7 +294,7 @@ export async function listPublicProperties(
     .lte("published_at", nowIso);
 
   if (featurePropertyIds) query = query.in("id", featurePropertyIds);
-  if (cityId) query = query.eq("city_id", cityId);
+  if (cityIds) query = query.in("city_id", cityIds);
   if (neighborhoodIds) query = query.in("neighborhood_id", neighborhoodIds);
   if (filters.type) query = query.eq("property_type", filters.type);
   if (filters.purpose) query = query.eq("purpose", filters.purpose);
@@ -451,8 +454,11 @@ export async function getPublicPropertyBySlug(
 
   const features: PropertyFeature[] = (row.property_features ?? [])
     .map((pf) => pf.features)
-    .filter((f): f is { name: string; category: string | null } => f !== null)
-    .map((f) => ({ name: f.name, category: f.category }));
+    .filter(
+      (f): f is { name: string; slug: string; category: string | null } =>
+        f !== null,
+    )
+    .map((f) => ({ name: f.name, slug: f.slug, category: f.category }));
 
   return {
     id: row.id,

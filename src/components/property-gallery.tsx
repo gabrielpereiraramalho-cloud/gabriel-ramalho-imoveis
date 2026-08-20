@@ -1,12 +1,15 @@
 "use client";
 
 import Image from "next/image";
-import { useState } from "react";
+import { useRef, useState } from "react";
 
 import type { PropertyImage } from "@/lib/properties/queries";
 
+const SWIPE_THRESHOLD = 40;
+
 export function PropertyGallery({ images }: { images: PropertyImage[] }) {
   const [active, setActive] = useState(0);
+  const touchStart = useRef<{ x: number; y: number } | null>(null);
 
   if (images.length === 0) {
     return (
@@ -16,12 +19,38 @@ export function PropertyGallery({ images }: { images: PropertyImage[] }) {
     );
   }
 
-  const currentIndex = Math.min(active, images.length - 1);
+  const last = images.length - 1;
+  const currentIndex = Math.min(active, last);
   const current = images[currentIndex];
+  const hasMultiple = images.length > 1;
+
+  const go = (dir: -1 | 1) => {
+    setActive((i) => Math.min(Math.max(Math.min(i, last) + dir, 0), last));
+  };
+
+  const onTouchStart = (e: React.TouchEvent) => {
+    const t = e.touches[0];
+    touchStart.current = { x: t.clientX, y: t.clientY };
+  };
+  const onTouchEnd = (e: React.TouchEvent) => {
+    if (!touchStart.current) return;
+    const t = e.changedTouches[0];
+    const dx = t.clientX - touchStart.current.x;
+    const dy = t.clientY - touchStart.current.y;
+    touchStart.current = null;
+    // Só considera swipe horizontal claro (evita troca em rolagem vertical).
+    if (Math.abs(dx) > SWIPE_THRESHOLD && Math.abs(dx) > Math.abs(dy)) {
+      go(dx < 0 ? 1 : -1);
+    }
+  };
 
   return (
     <div className="flex flex-col gap-3">
-      <div className="relative aspect-[16/10] w-full overflow-hidden rounded-xl bg-offwhite">
+      <div
+        className="relative aspect-[16/10] w-full touch-pan-y overflow-hidden rounded-xl bg-offwhite"
+        onTouchStart={hasMultiple ? onTouchStart : undefined}
+        onTouchEnd={hasMultiple ? onTouchEnd : undefined}
+      >
         <Image
           src={current.url}
           alt={current.alt}
@@ -30,14 +59,35 @@ export function PropertyGallery({ images }: { images: PropertyImage[] }) {
           sizes="(max-width: 1024px) 100vw, 66vw"
           className="object-contain"
         />
-        {images.length > 1 ? (
-          <span className="absolute bottom-2 right-2 rounded-full bg-brand-navy/80 px-2.5 py-0.5 text-xs font-medium text-white lg:hidden">
-            {currentIndex + 1} de {images.length}
-          </span>
+
+        {hasMultiple ? (
+          <>
+            <button
+              type="button"
+              onClick={() => go(-1)}
+              disabled={currentIndex === 0}
+              aria-label="Foto anterior"
+              className="absolute left-2 top-1/2 hidden -translate-y-1/2 rounded-full bg-white/80 p-2 text-brand-navy shadow-sm transition hover:bg-white disabled:opacity-30 sm:flex"
+            >
+              <Arrow dir="left" />
+            </button>
+            <button
+              type="button"
+              onClick={() => go(1)}
+              disabled={currentIndex === last}
+              aria-label="Próxima foto"
+              className="absolute right-2 top-1/2 hidden -translate-y-1/2 rounded-full bg-white/80 p-2 text-brand-navy shadow-sm transition hover:bg-white disabled:opacity-30 sm:flex"
+            >
+              <Arrow dir="right" />
+            </button>
+            <span className="absolute bottom-2 right-2 rounded-full bg-brand-navy/80 px-2.5 py-0.5 text-xs font-medium text-white">
+              {currentIndex + 1} de {images.length}
+            </span>
+          </>
         ) : null}
       </div>
 
-      {images.length > 1 ? (
+      {hasMultiple ? (
         <div className="flex gap-2 overflow-x-auto pb-1">
           {images.map((img, index) => (
             <button
@@ -46,7 +96,9 @@ export function PropertyGallery({ images }: { images: PropertyImage[] }) {
               onClick={() => setActive(index)}
               aria-label={`Ver foto ${index + 1}`}
               className={`relative aspect-[4/3] w-24 shrink-0 overflow-hidden rounded-md border-2 ${
-                index === active ? "border-brand-navy" : "border-transparent"
+                index === currentIndex
+                  ? "border-brand-navy"
+                  : "border-transparent"
               }`}
             >
               <Image
@@ -61,5 +113,27 @@ export function PropertyGallery({ images }: { images: PropertyImage[] }) {
         </div>
       ) : null}
     </div>
+  );
+}
+
+function Arrow({ dir }: { dir: "left" | "right" }) {
+  return (
+    <svg
+      width="18"
+      height="18"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      {dir === "left" ? (
+        <path d="M15 18l-6-6 6-6" />
+      ) : (
+        <path d="M9 6l6 6-6 6" />
+      )}
+    </svg>
   );
 }

@@ -85,6 +85,7 @@ export default async function Home() {
         cities={options.cities}
         neighborhoods={options.neighborhoods}
         types={options.types}
+        featured={featured.slice(0, 3)}
       />
 
       {highlights.length > 0 ? (
