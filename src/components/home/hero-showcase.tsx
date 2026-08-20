@@ -2,28 +2,97 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 
 import type { PropertyCard } from "@/lib/properties/queries";
 import { PropertyPrice } from "@/components/property-price";
 
 const SWIPE_THRESHOLD = 40;
+const AUTOPLAY_MS = 6000;
+const INTERACTION_PAUSE_MS = 8000;
+
+/** Preferência do usuário por menos movimento (sem flicker de hidratação). */
+function usePrefersReducedMotion(): boolean {
+  return useSyncExternalStore(
+    (cb) => {
+      const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
+      mq.addEventListener("change", cb);
+      return () => mq.removeEventListener("change", cb);
+    },
+    () => window.matchMedia("(prefers-reduced-motion: reduce)").matches,
+    () => false,
+  );
+}
+
+/** Visibilidade da aba/janela. */
+function useDocumentVisible(): boolean {
+  return useSyncExternalStore(
+    (cb) => {
+      document.addEventListener("visibilitychange", cb);
+      return () => document.removeEventListener("visibilitychange", cb);
+    },
+    () => !document.hidden,
+    () => true,
+  );
+}
 
 /**
  * Vitrine do Hero: carrossel leve com até 3 imóveis em destaque.
- * Cada slide é clicável (abre o imóvel); setas no desktop e swipe no mobile.
- * Sem autoplay. Primeira imagem com priority para preservar o LCP.
+ * Autoplay discreto (6s) que pausa em hover/interação/aba oculta e respeita
+ * prefers-reduced-motion. Cada slide é clicável; setas no desktop e swipe no
+ * mobile. Primeira imagem com priority para preservar o LCP.
  */
 export function HeroShowcase({ items }: { items: PropertyCard[] }) {
   const [index, setIndex] = useState(0);
+  const [hover, setHover] = useState(false);
+  const [interacting, setInteracting] = useState(false);
   const touchStart = useRef<{ x: number; y: number } | null>(null);
   const swiped = useRef(false);
+  const interactTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const reduceMotion = usePrefersReducedMotion();
+  const visible = useDocumentVisible();
 
   const last = items.length - 1;
   const hasMultiple = items.length > 1;
 
+  const autoplayOn =
+    hasMultiple && !reduceMotion && !hover && !interacting && visible;
+
+  // Autoplay: avança em loop (último → primeiro).
+  useEffect(() => {
+    if (!autoplayOn) return;
+    const id = setInterval(() => {
+      setIndex((i) => (i + 1) % items.length);
+    }, AUTOPLAY_MS);
+    return () => clearInterval(id);
+  }, [autoplayOn, items.length]);
+
+  useEffect(() => {
+    return () => {
+      if (interactTimer.current) clearTimeout(interactTimer.current);
+    };
+  }, []);
+
+  // Pausa temporária após interação manual; retoma após alguns segundos.
+  const pauseForInteraction = () => {
+    setInteracting(true);
+    if (interactTimer.current) clearTimeout(interactTimer.current);
+    interactTimer.current = setTimeout(
+      () => setInteracting(false),
+      INTERACTION_PAUSE_MS,
+    );
+  };
+
   const go = (dir: -1 | 1) => {
     setIndex((i) => Math.min(Math.max(i + dir, 0), last));
+  };
+  const handleArrow = (dir: -1 | 1) => {
+    pauseForInteraction();
+    go(dir);
+  };
+  const handleDot = (i: number) => {
+    pauseForInteraction();
+    setIndex(i);
   };
 
   const onTouchStart = (e: React.TouchEvent) => {
@@ -38,6 +107,7 @@ export function HeroShowcase({ items }: { items: PropertyCard[] }) {
     touchStart.current = null;
     if (Math.abs(dx) > SWIPE_THRESHOLD && Math.abs(dx) > Math.abs(dy)) {
       swiped.current = true;
+      pauseForInteraction();
       go(dx < 0 ? 1 : -1);
     }
   };
@@ -56,6 +126,8 @@ export function HeroShowcase({ items }: { items: PropertyCard[] }) {
       onTouchStart={hasMultiple ? onTouchStart : undefined}
       onTouchEnd={hasMultiple ? onTouchEnd : undefined}
       onClickCapture={onClickCapture}
+      onMouseEnter={() => setHover(true)}
+      onMouseLeave={() => setHover(false)}
       aria-roledescription="carrossel"
       aria-label="Imóveis em destaque"
     >
@@ -113,7 +185,7 @@ export function HeroShowcase({ items }: { items: PropertyCard[] }) {
         <>
           <button
             type="button"
-            onClick={() => go(-1)}
+            onClick={() => handleArrow(-1)}
             disabled={index === 0}
             aria-label="Imóvel anterior"
             className="absolute left-2 top-1/2 hidden -translate-y-1/2 rounded-full bg-white/80 p-2 text-brand-navy shadow-sm transition hover:bg-white disabled:opacity-30 sm:flex"
@@ -122,7 +194,7 @@ export function HeroShowcase({ items }: { items: PropertyCard[] }) {
           </button>
           <button
             type="button"
-            onClick={() => go(1)}
+            onClick={() => handleArrow(1)}
             disabled={index === last}
             aria-label="Próximo imóvel"
             className="absolute right-2 top-1/2 hidden -translate-y-1/2 rounded-full bg-white/80 p-2 text-brand-navy shadow-sm transition hover:bg-white disabled:opacity-30 sm:flex"
@@ -135,7 +207,7 @@ export function HeroShowcase({ items }: { items: PropertyCard[] }) {
               <button
                 key={card.id}
                 type="button"
-                onClick={() => setIndex(i)}
+                onClick={() => handleDot(i)}
                 aria-label={`Ir para o imóvel ${i + 1}`}
                 aria-current={i === index}
                 className={`h-1.5 rounded-full transition-all ${
