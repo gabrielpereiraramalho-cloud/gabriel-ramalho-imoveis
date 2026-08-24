@@ -24,12 +24,31 @@ export type OruloSyncSummary = {
 type ActiveIdsPage = {
   total_pages?: number;
   page?: number;
-  building_ids?: number[];
-  ids?: number[];
-  results?: number[];
+  total?: number;
+  buildings?: { id: string | number; updated_at?: string }[];
 };
 
 type UnknownRecord = Record<string, unknown>;
+
+/** Converte data da Órulo ("dd/MM/yyyy HH:mm:ss") em ISO; null se inválida. */
+function parseOruloDate(v: unknown): string | null {
+  if (typeof v !== "string") return null;
+  const m = v.match(/^(\d{2})\/(\d{2})\/(\d{4})\s+(\d{2}):(\d{2}):(\d{2})$/);
+  if (!m) return null;
+  const [, d, mo, y, h, mi, s] = m;
+  const dt = new Date(`${y}-${mo}-${d}T${h}:${mi}:${s}`);
+  return Number.isNaN(dt.getTime()) ? null : dt.toISOString();
+}
+
+/** Compõe o endereço a partir do objeto address da Órulo. */
+function composeAddress(address: UnknownRecord): string | null {
+  const streetType = str(address.street_type);
+  const street = str(address.street);
+  const number = str(address.number) ?? (num(address.number)?.toString() ?? null);
+  const line = [streetType, street].filter(Boolean).join(" ").trim();
+  if (!line) return null;
+  return number ? `${line}, ${number}` : line;
+}
 
 function asRecord(v: unknown): UnknownRecord {
   return v && typeof v === "object" ? (v as UnknownRecord) : {};
@@ -76,22 +95,21 @@ function extractBuildingFields(
     developer:
       firstStr(raw, ["developer", "developer_name", "builder"]) ??
       firstStr(asRecord(raw.developer), ["name"]),
-    city: firstStr(raw, ["city"]) ?? firstStr(address, ["city"]),
+    city: firstStr(address, ["city"]) ?? firstStr(raw, ["city"]),
+    // Bairro da Órulo vem em address.area.
     neighborhood:
-      firstStr(raw, ["neighborhood", "neighbourhood"]) ??
-      firstStr(address, ["neighborhood", "neighbourhood"]),
-    address:
-      firstStr(raw, ["address_text", "street"]) ??
-      firstStr(address, ["street", "address", "formatted"]),
+      firstStr(address, ["area", "neighborhood", "neighbourhood"]) ??
+      firstStr(raw, ["neighborhood"]),
+    address: composeAddress(address) ?? firstStr(raw, ["address_text"]),
     description: firstStr(raw, ["description"]),
     min_price: firstNum(raw, ["min_price", "minimum_price", "price_from"]),
-    bedrooms: firstNum(raw, ["bedrooms", "min_bedrooms"]),
-    bathrooms: firstNum(raw, ["bathrooms", "min_bathrooms"]),
-    suites: firstNum(raw, ["suites", "min_suites"]),
-    parking: firstNum(raw, ["parking", "parking_spots", "min_parking"]),
-    private_area: firstNum(raw, ["private_area", "min_private_area", "area"]),
-    status: firstStr(raw, ["status", "construction_status"]),
-    external_updated_at: firstStr(raw, ["updated_at", "updated"]),
+    bedrooms: firstNum(raw, ["min_bedrooms", "bedrooms"]),
+    bathrooms: firstNum(raw, ["min_bathrooms", "bathrooms"]),
+    suites: firstNum(raw, ["min_suites", "suites"]),
+    parking: firstNum(raw, ["min_parking", "parking"]),
+    private_area: firstNum(raw, ["min_area", "private_area", "area"]),
+    status: firstStr(raw, ["status", "stage", "construction_status"]),
+    external_updated_at: parseOruloDate(raw.updated_at),
     raw: raw as Json,
     images,
     floor_plans: floorPlans,
@@ -119,8 +137,8 @@ async function listActiveBuildingIds(): Promise<{
     const data = await oruloGet<ActiveIdsPage>(
       `/api/v2/buildings/ids/active?page=${page}&results_per_page=${RESULTS_PER_PAGE}`,
     );
-    const pageIds = data.building_ids ?? data.ids ?? data.results ?? [];
-    for (const id of pageIds) ids.push(String(id));
+    // O envelope real é { buildings: [{ id, updated_at }], total, total_pages }.
+    for (const b of data.buildings ?? []) ids.push(String(b.id));
     totalPages =
       typeof data.total_pages === "number" && data.total_pages > 0
         ? data.total_pages
@@ -174,15 +192,17 @@ export async function syncOrulo(): Promise<OruloSyncSummary> {
 
     for (const id of ids) {
       const raw = asRecord(await oruloGet<unknown>(`/api/v2/buildings/${id}`));
-      const images = (await oruloGet<unknown>(
-        `/api/v2/buildings/${id}/images`,
-      )) as Json;
-      const floorPlans = (await oruloGet<unknown>(
-        `/api/v2/buildings/${id}/floor_plans`,
-      )) as Json;
+      // Os endpoints dedicados /images e /floor_plans retornam 400 nesta praça;
+      // o detalhe do building já inclui os arrays completos.
+      const images = (Array.isArray(raw.images) ? raw.images : null) as Json;
+      const floorPlans = (
+        Array.isArray(raw.floor_plans) ? raw.floor_plans : null
+      ) as Json;
 
-      if (Array.isArray(images) && images.length > 0) summary.imagesFetched += 1;
-      if (Array.isArray(floorPlans) && floorPlans.length > 0) {
+      if (Array.isArray(raw.images) && raw.images.length > 0) {
+        summary.imagesFetched += 1;
+      }
+      if (Array.isArray(raw.floor_plans) && raw.floor_plans.length > 0) {
         summary.floorPlansFetched += 1;
       }
 
