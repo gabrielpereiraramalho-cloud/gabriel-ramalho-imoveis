@@ -13,7 +13,8 @@ export type WhatsAppSource =
   | "about"
   | "sell_cta"
   | "footer"
-  | "owner_lead_success";
+  | "owner_lead_success"
+  | "empreendimento";
 
 /** Dados públicos do imóvel usados nos eventos (nenhum dado pessoal). */
 export type TrackedProperty = {

@@ -89,3 +89,30 @@ export async function oruloGet<T>(path: string): Promise<T> {
 
   return (await res.json()) as T;
 }
+
+/** PUT autenticado (JSON) em uma rota da Órulo. Retorna o status HTTP. */
+export async function oruloPut(path: string, body: unknown): Promise<void> {
+  const doFetch = async (token: string) =>
+    fetch(`${oruloConfig.baseUrl}${path}`, {
+      method: "PUT",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      },
+      body: JSON.stringify(body),
+      cache: "no-store",
+    });
+
+  let token = await getAccessToken();
+  let res = await doFetch(token);
+  if (res.status === 401) {
+    tokenCache = null;
+    token = await getAccessToken();
+    res = await doFetch(token);
+  }
+
+  if (!res.ok) {
+    throw new OruloError(`Órulo PUT ${path} falhou (HTTP ${res.status}).`);
+  }
+}

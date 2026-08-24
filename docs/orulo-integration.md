@@ -41,6 +41,24 @@
 - Ao publicar um empreendimento no site: `PUT /api/v2/buildings/{id}/publication_links` (token da imobiliária; **não** aceita oruloEndUserAuth). Substitui a lista anterior; pode ter múltiplos links (inclusive por tipologia).
 - **Não manter atualizado pode restringir o acesso à API / notificações** → incluir na etapa de publicação pública.
 
+## Contratos reais confirmados (praça de homologação)
+
+- **Auth:** `POST /oauth/token` (form-urlencoded, body) → `{ access_token, expires_in ~1 ano, token_type: Bearer }`.
+- **Config:** `GET /api/v2/config` → `{ active: true, name, ... }`.
+- **IDs ativos:** `GET /api/v2/buildings/ids/active?page=&results_per_page=` → `{ buildings: [{ id, updated_at }], total, total_pages }` (a chave é **`buildings`**).
+- **Detalhe:** `GET /api/v2/buildings/{id}` → inclui `images` e `floor_plans` completos (os endpoints dedicados `/images` e `/floor_plans` retornam 400 — usar o detalhe). Bairro em `address.area`; incorporadora em `developer.name`; numéricos em `min_*`/`max_*`; datas `dd/MM/yyyy HH:mm:ss`.
+- **URLs de mídia:** `https://static.orulo.com.br/images/properties/{segmento}/{id}.jpg` — segmentos `thumb`, `featured_modern_without_watermark`, `large`, `xlarge` (imagens e plantas).
+- **publication_links:** `PUT /api/v2/buildings/{id}/publication_links` body `{ publication_links: [{ url, active: true }] }` → 200 (substitui a lista). Remover = lista vazia.
+
+## Publicação automática na praça definitiva (PREPARADA, não ativada)
+
+Hoje a publicação é **individual** pelo admin. Para a praça definitiva de PB, a arquitetura já está pronta para publicar toda a carteira válida automaticamente:
+
+- **Gate de validação** (`checkEligibility`, já reutilizável): nome, cidade, bairro, preço válido (>0), ≥1 imagem, status presente, origem Órulo (garantida pela tabela).
+- **Ativação por env flag** (a criar): `ORULO_AUTO_PUBLISH` (default off) — mantém os 40 de SP despublicados; quando a PB for liberada, ligar a flag e a sincronização/webhook publica os elegíveis.
+- **Webhook** (fase seguinte): `active`/`added_to_distribution` → reprocessa detalhe + (se auto on) publica elegíveis; `removed`/`excluded_from_distribution` → despublica + limpa publication_links. Idempotente por `external_id` (sem duplicidade).
+- **publication_links** enviado/atualizado a cada publish/unpublish (já implementado nas ações individuais; reaproveitar no fluxo automático).
+
 ## oruloEndUserAuth (não implementar agora)
 
 Auth opcional de corretor para dados comerciais em tempo real (promoções, premiações, comissão, contatos comerciais, arquivos, oportunidades). **Não sincronizar/armazenar** esses dados; se necessário, consultar em tempo real via fluxo OAuth separado.

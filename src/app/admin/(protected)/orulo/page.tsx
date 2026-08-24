@@ -2,7 +2,9 @@ import Link from "next/link";
 
 import { createClient } from "@/lib/supabase/server";
 import { isOruloConfigured } from "@/lib/orulo/config";
+import { checkEligibility } from "@/lib/orulo/eligibility";
 import { runOruloSync } from "./actions";
+import { PublishControls } from "./publish-controls";
 
 const brl = new Intl.NumberFormat("pt-BR", {
   style: "currency",
@@ -32,7 +34,7 @@ export default async function OruloPage() {
       supabase
         .from("orulo_buildings")
         .select(
-          "external_id, name, city, neighborhood, min_price, status, synced_at",
+          "external_id, slug, name, city, neighborhood, min_price, status, cover_image_id, images, published, synced_at",
         )
         .order("synced_at", { ascending: false })
         .limit(200),
@@ -121,29 +123,62 @@ export default async function OruloPage() {
               <th className={thCls}>Cidade</th>
               <th className={thCls}>Bairro</th>
               <th className={thCls}>Preço inicial</th>
-              <th className={thCls}>Status</th>
+              <th className={thCls}>Publicado</th>
+              <th className={thCls}>Elegível</th>
+              <th className={thCls}>Ações</th>
             </tr>
           </thead>
           <tbody>
             {(buildings ?? []).length === 0 ? (
               <tr>
-                <td className="px-3 py-6 text-center text-zinc-500" colSpan={6}>
+                <td className="px-3 py-6 text-center text-zinc-500" colSpan={8}>
                   Nenhum empreendimento sincronizado ainda.
                 </td>
               </tr>
             ) : (
-              (buildings ?? []).map((b) => (
-                <tr key={b.external_id} className="border-t border-zinc-200">
-                  <td className={tdCls}>{b.external_id}</td>
-                  <td className={`${tdCls} max-w-xs truncate`}>
-                    {b.name ?? "—"}
-                  </td>
-                  <td className={tdCls}>{b.city ?? "—"}</td>
-                  <td className={tdCls}>{b.neighborhood ?? "—"}</td>
-                  <td className={tdCls}>{money(b.min_price)}</td>
-                  <td className={tdCls}>{b.status ?? "—"}</td>
-                </tr>
-              ))
+              (buildings ?? []).map((b) => {
+                const elig = checkEligibility(b);
+                return (
+                  <tr key={b.external_id} className="border-t border-zinc-200">
+                    <td className={tdCls}>{b.external_id}</td>
+                    <td className={`${tdCls} max-w-xs truncate`}>
+                      {b.name ?? "—"}
+                    </td>
+                    <td className={tdCls}>{b.city ?? "—"}</td>
+                    <td className={tdCls}>{b.neighborhood ?? "—"}</td>
+                    <td className={tdCls}>{money(b.min_price)}</td>
+                    <td className={tdCls}>{b.published ? "Sim" : "Não"}</td>
+                    <td className={tdCls}>
+                      {elig.eligible ? (
+                        "Sim"
+                      ) : (
+                        <span
+                          className="text-amber-700"
+                          title={elig.reasons.join(", ")}
+                        >
+                          Não
+                        </span>
+                      )}
+                    </td>
+                    <td className={tdCls}>
+                      <div className="flex items-center gap-2">
+                        <Link
+                          href={`/admin/orulo/preview/${b.external_id}`}
+                          className="rounded border border-zinc-300 px-2 py-1 text-xs"
+                        >
+                          Prévia
+                        </Link>
+                        <PublishControls
+                          externalId={b.external_id}
+                          published={b.published}
+                          eligible={elig.eligible}
+                          reasons={elig.reasons}
+                        />
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })
             )}
           </tbody>
         </table>

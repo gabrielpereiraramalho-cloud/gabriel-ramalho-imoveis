@@ -23,6 +23,12 @@ const nextConfig: NextConfig = {
         hostname: "*.supabase.co",
         pathname: "/storage/v1/object/public/**",
       },
+      // Imagens/plantas dos empreendimentos Órulo.
+      {
+        protocol: "https" as const,
+        hostname: "static.orulo.com.br",
+        pathname: "/images/**",
+      },
     ],
   },
   experimental: {

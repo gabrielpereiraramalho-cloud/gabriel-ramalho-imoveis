@@ -2,6 +2,7 @@ import "server-only";
 
 import { createClient } from "@/lib/supabase/server";
 import type { Json, TablesInsert } from "@/types/database";
+import { slugify } from "@/lib/slug";
 import { OruloError, isOruloConfigured } from "./config";
 import { oruloGet } from "./client";
 
@@ -89,9 +90,17 @@ function extractBuildingFields(
   floorPlans: Json | null,
 ): TablesInsert<"orulo_buildings"> {
   const address = asRecord(raw.address);
+  const name = firstStr(raw, ["name", "title"]);
+  const defaultImage = asRecord(raw.default_image);
   return {
     external_id: externalId,
-    name: firstStr(raw, ["name", "title"]),
+    // Slug estável incluindo o external_id imutável.
+    slug: `${slugify(name ?? "empreendimento")}-${externalId}`,
+    max_bedrooms: firstNum(raw, ["max_bedrooms"]),
+    max_area: firstNum(raw, ["max_area"]),
+    cover_image_id: firstStr(defaultImage, ["id"]),
+    typologies: Array.isArray(raw.typologies) ? (raw.typologies as Json) : null,
+    name,
     developer:
       firstStr(raw, ["developer", "developer_name", "builder"]) ??
       firstStr(asRecord(raw.developer), ["name"]),
