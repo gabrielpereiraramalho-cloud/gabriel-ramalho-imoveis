@@ -1,5 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
-import { oruloImageUrl } from "./images";
+import { oruloImageUrl, oruloMediaUrl } from "./images";
 
 // ---------------------------------------------------------------------------
 // DTOs públicos (nunca incluem `raw`, contatos comerciais ou comissão)
@@ -62,14 +62,13 @@ const n = (v: unknown): number | null =>
       : null;
 
 function toMedia(items: unknown, fallbackAlt: string): OruloMedia[] {
-  return asArr(items).map((it) => {
-    const id = s(it.id) ?? String(it.id ?? "");
-    return {
-      url: oruloImageUrl(id, "large"),
-      thumb: oruloImageUrl(id, "card"),
-      alt: s(it.description) ?? fallbackAlt,
-    };
-  });
+  return asArr(items).map((it) => ({
+    // Fonte primária: URL real (hash) entregue pela API. Fallback interno de
+    // oruloMediaUrl: montar por id (mídia antiga).
+    url: oruloMediaUrl(it, "large"),
+    thumb: oruloMediaUrl(it, "card"),
+    alt: s(it.description) ?? fallbackAlt,
+  }));
 }
 
 function toTypologies(items: unknown): OruloTypology[] {
@@ -108,9 +107,19 @@ type RowShape = {
 };
 
 function mapCard(row: RowShape): OruloBuildingCard {
-  const cover = row.cover_image_id
-    ? oruloImageUrl(row.cover_image_id, "card")
-    : (toMedia(row.images, row.name ?? "")[0]?.url ?? null);
+  // Capa: preferir a imagem default (default_image) — localizada no array de
+  // mídia pelo cover_image_id — usando sua URL real. Depois, a primeira imagem.
+  // Por último, o método antigo de montar por id (mídia antiga sem URL).
+  const mediaObjs = asArr(row.images);
+  const coverObj = row.cover_image_id
+    ? mediaObjs.find(
+        (m) => (s(m.id) ?? String(m.id ?? "")) === row.cover_image_id,
+      )
+    : undefined;
+  const cover =
+    (coverObj ? oruloMediaUrl(coverObj, "card") : null) ??
+    (mediaObjs[0] ? oruloMediaUrl(mediaObjs[0], "card") : null) ??
+    (row.cover_image_id ? oruloImageUrl(row.cover_image_id, "card") : null);
   return {
     slug: row.slug ?? "",
     name: row.name ?? "Empreendimento",

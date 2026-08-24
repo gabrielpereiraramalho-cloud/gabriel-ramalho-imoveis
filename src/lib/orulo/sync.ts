@@ -5,6 +5,7 @@ import type { Json, TablesInsert } from "@/types/database";
 import { slugify } from "@/lib/slug";
 import { OruloError, isOruloConfigured } from "./config";
 import { oruloGet } from "./client";
+import { ORULO_MEDIA_DIMENSIONS_QS } from "./images";
 
 const RESULTS_PER_PAGE = 500; // máximo permitido pela Órulo
 
@@ -159,6 +160,27 @@ async function listActiveBuildingIds(): Promise<{
 }
 
 /**
+ * Busca a mídia (imagens ou plantas) de um empreendimento no endpoint dedicado,
+ * que devolve as URLs reais (nome de arquivo em hash) por dimensão. Exige o
+ * parâmetro obrigatório `dimensions[]`. Retorna null se não houver mídia ou se o
+ * endpoint falhar (nesse caso o chamador cai no array id-only do detalhe).
+ */
+async function fetchBuildingMedia(
+  buildingId: string,
+  kind: "images" | "floor_plans",
+): Promise<Json | null> {
+  try {
+    const data = await oruloGet<UnknownRecord>(
+      `/api/v2/buildings/${buildingId}/${kind}?${ORULO_MEDIA_DIMENSIONS_QS}`,
+    );
+    const arr = data[kind];
+    return Array.isArray(arr) && arr.length > 0 ? (arr as Json) : null;
+  } catch {
+    return null;
+  }
+}
+
+/**
  * Sincronização manual idempotente (upsert por external_id). Não exclui nada.
  * Registra a execução em orulo_sync_runs (sem secrets/tokens no erro).
  */
@@ -201,17 +223,22 @@ export async function syncOrulo(): Promise<OruloSyncSummary> {
 
     for (const id of ids) {
       const raw = asRecord(await oruloGet<unknown>(`/api/v2/buildings/${id}`));
-      // Os endpoints dedicados /images e /floor_plans retornam 400 nesta praça;
-      // o detalhe do building já inclui os arrays completos.
-      const images = (Array.isArray(raw.images) ? raw.images : null) as Json;
-      const floorPlans = (
+      // Fonte primária de mídia: endpoints dedicados /images e /floor_plans com
+      // dimensions[] — trazem as URLs reais (nome em hash). O array do detalhe
+      // só tem o id numérico (não é mais o nome do arquivo) e serve de fallback
+      // para mídia antiga, cujo nome de arquivo ainda coincide com o id.
+      const rawImages = (Array.isArray(raw.images) ? raw.images : null) as Json;
+      const rawFloorPlans = (
         Array.isArray(raw.floor_plans) ? raw.floor_plans : null
       ) as Json;
+      const images = (await fetchBuildingMedia(id, "images")) ?? rawImages;
+      const floorPlans =
+        (await fetchBuildingMedia(id, "floor_plans")) ?? rawFloorPlans;
 
-      if (Array.isArray(raw.images) && raw.images.length > 0) {
+      if (Array.isArray(images) && images.length > 0) {
         summary.imagesFetched += 1;
       }
-      if (Array.isArray(raw.floor_plans) && raw.floor_plans.length > 0) {
+      if (Array.isArray(floorPlans) && floorPlans.length > 0) {
         summary.floorPlansFetched += 1;
       }
 
