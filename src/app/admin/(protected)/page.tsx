@@ -44,6 +44,12 @@ export default async function AdminDashboardPage() {
         >
           Leads
         </Link>
+        <Link
+          href="/admin/orulo"
+          className="rounded border border-zinc-300 px-4 py-2 text-sm font-medium dark:border-zinc-700"
+        >
+          Órulo (teste)
+        </Link>
       </nav>
 
       <form action={logout}>

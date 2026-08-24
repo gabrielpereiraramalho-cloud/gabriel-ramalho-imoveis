@@ -28,6 +28,14 @@ export type SolarPosition =
 
 type Timestamp = string;
 
+export type Json =
+  | string
+  | number
+  | boolean
+  | null
+  | { [key: string]: Json | undefined }
+  | Json[];
+
 export type Database = {
   public: {
     Tables: {
@@ -462,6 +470,120 @@ export type Database = {
           active?: boolean;
           created_at?: Timestamp;
           updated_at?: Timestamp;
+        };
+        Relationships: [];
+      };
+      orulo_buildings: {
+        Row: {
+          external_id: string;
+          name: string | null;
+          developer: string | null;
+          city: string | null;
+          neighborhood: string | null;
+          address: string | null;
+          description: string | null;
+          min_price: number | null;
+          bedrooms: number | null;
+          bathrooms: number | null;
+          suites: number | null;
+          parking: number | null;
+          private_area: number | null;
+          status: string | null;
+          external_updated_at: Timestamp | null;
+          raw: Json;
+          images: Json | null;
+          floor_plans: Json | null;
+          synced_at: Timestamp;
+          created_at: Timestamp;
+        };
+        Insert: {
+          external_id: string;
+          name?: string | null;
+          developer?: string | null;
+          city?: string | null;
+          neighborhood?: string | null;
+          address?: string | null;
+          description?: string | null;
+          min_price?: number | null;
+          bedrooms?: number | null;
+          bathrooms?: number | null;
+          suites?: number | null;
+          parking?: number | null;
+          private_area?: number | null;
+          status?: string | null;
+          external_updated_at?: Timestamp | null;
+          raw: Json;
+          images?: Json | null;
+          floor_plans?: Json | null;
+          synced_at?: Timestamp;
+          created_at?: Timestamp;
+        };
+        Update: {
+          external_id?: string;
+          name?: string | null;
+          developer?: string | null;
+          city?: string | null;
+          neighborhood?: string | null;
+          address?: string | null;
+          description?: string | null;
+          min_price?: number | null;
+          bedrooms?: number | null;
+          bathrooms?: number | null;
+          suites?: number | null;
+          parking?: number | null;
+          private_area?: number | null;
+          status?: string | null;
+          external_updated_at?: Timestamp | null;
+          raw?: Json;
+          images?: Json | null;
+          floor_plans?: Json | null;
+          synced_at?: Timestamp;
+          created_at?: Timestamp;
+        };
+        Relationships: [];
+      };
+      orulo_sync_runs: {
+        Row: {
+          id: string;
+          started_at: Timestamp;
+          finished_at: Timestamp | null;
+          status: string;
+          pages_traversed: number | null;
+          buildings_found: number | null;
+          created_count: number | null;
+          updated_count: number | null;
+          images_fetched: number | null;
+          floor_plans_fetched: number | null;
+          error_summary: string | null;
+          created_at: Timestamp;
+        };
+        Insert: {
+          id?: string;
+          started_at?: Timestamp;
+          finished_at?: Timestamp | null;
+          status: string;
+          pages_traversed?: number | null;
+          buildings_found?: number | null;
+          created_count?: number | null;
+          updated_count?: number | null;
+          images_fetched?: number | null;
+          floor_plans_fetched?: number | null;
+          error_summary?: string | null;
+          created_at?: Timestamp;
+        };
+        Update: {
+          id?: string;
+          started_at?: Timestamp;
+          finished_at?: Timestamp | null;
+          status?: string;
+          pages_traversed?: number | null;
+          buildings_found?: number | null;
+          created_count?: number | null;
+          updated_count?: number | null;
+          images_fetched?: number | null;
+          floor_plans_fetched?: number | null;
+          error_summary?: string | null;
+          created_at?: Timestamp;
         };
         Relationships: [];
       };
