@@ -7,7 +7,15 @@ import type { PropertyImage } from "@/lib/properties/queries";
 
 const SWIPE_THRESHOLD = 40;
 
-export function PropertyGallery({ images }: { images: PropertyImage[] }) {
+export function PropertyGallery({
+  images,
+  unoptimized = false,
+}: {
+  images: PropertyImage[];
+  // Imagens de CDN externa já pré-dimensionada (ex.: Órulo) passam direto,
+  // sem o Next Image Optimizer (evita dependência do allowlist de host).
+  unoptimized?: boolean;
+}) {
   const [active, setActive] = useState(0);
   const [fullscreen, setFullscreen] = useState(false);
   const touchStart = useRef<{ x: number; y: number } | null>(null);
@@ -87,6 +95,7 @@ export function PropertyGallery({ images }: { images: PropertyImage[] }) {
           alt={current.alt}
           fill
           priority
+          unoptimized={unoptimized}
           sizes="(max-width: 1024px) 100vw, 66vw"
           className="object-contain"
         />
@@ -144,6 +153,7 @@ export function PropertyGallery({ images }: { images: PropertyImage[] }) {
                 src={img.url}
                 alt={img.alt}
                 fill
+                unoptimized={unoptimized}
                 sizes="96px"
                 className="object-cover"
               />
@@ -158,6 +168,7 @@ export function PropertyGallery({ images }: { images: PropertyImage[] }) {
           index={currentIndex}
           onIndex={setActive}
           onClose={() => setFullscreen(false)}
+          unoptimized={unoptimized}
         />
       ) : null}
     </div>
@@ -169,11 +180,13 @@ function FullscreenGallery({
   index,
   onIndex,
   onClose,
+  unoptimized = false,
 }: {
   images: PropertyImage[];
   index: number;
   onIndex: (i: number) => void;
   onClose: () => void;
+  unoptimized?: boolean;
 }) {
   const touchStart = useRef<{ x: number; y: number } | null>(null);
   const last = images.length - 1;
@@ -240,6 +253,7 @@ function FullscreenGallery({
           src={current.url}
           alt={current.alt}
           fill
+          unoptimized={unoptimized}
           sizes="100vw"
           className="object-contain"
         />

@@ -66,6 +66,7 @@ export function BuildingDetail({ b }: { b: OruloBuildingDetail }) {
           {/* Galeria */}
           <PropertyGallery
             images={b.images.map((m) => ({ url: m.url, alt: m.alt }))}
+            unoptimized
           />
 
           {/* Informações principais */}
@@ -150,6 +151,7 @@ export function BuildingDetail({ b }: { b: OruloBuildingDetail }) {
                       src={p.thumb}
                       alt={p.alt}
                       fill
+                      unoptimized
                       sizes="(max-width: 640px) 50vw, 33vw"
                       className="object-contain"
                     />
