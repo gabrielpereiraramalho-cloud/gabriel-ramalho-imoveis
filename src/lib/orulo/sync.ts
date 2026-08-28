@@ -1,11 +1,16 @@
 import "server-only";
 
+import type { SupabaseClient } from "@supabase/supabase-js";
+
 import { createClient } from "@/lib/supabase/server";
-import type { Json, TablesInsert } from "@/types/database";
+import type { Database, Json, TablesInsert } from "@/types/database";
 import { slugify } from "@/lib/slug";
 import { OruloError, isOruloConfigured } from "./config";
 import { oruloGet } from "./client";
 import { ORULO_MEDIA_DIMENSIONS_QS } from "./images";
+
+/** Cliente Supabase aceito pelas rotinas de sync (SSR ou service role). */
+type Db = SupabaseClient<Database>;
 
 const RESULTS_PER_PAGE = 500; // máximo permitido pela Órulo
 
@@ -180,6 +185,64 @@ async function fetchBuildingMedia(
   }
 }
 
+export type UpsertBuildingOutcome = {
+  existedBefore: boolean;
+  hadImages: boolean;
+  hadFloorPlans: boolean;
+};
+
+/**
+ * (Re)sincroniza UM empreendimento por external_id: busca o detalhe + mídia
+ * (endpoints dedicados com dimensions[], URLs reais em hash) e faz upsert
+ * idempotente. NÃO grava `published`/`published_at`: como o upsert-merge só
+ * escreve as colunas enviadas, o estado de publicação é preservado. Reutilizado
+ * pelo sync em massa e pelo webhook. `existingIds` (opcional) evita uma consulta
+ * por item no sync em massa.
+ */
+export async function upsertBuildingById(
+  supabase: Db,
+  externalId: string,
+  existingIds?: Set<string>,
+): Promise<UpsertBuildingOutcome> {
+  let existedBefore: boolean;
+  if (existingIds) {
+    existedBefore = existingIds.has(externalId);
+  } else {
+    const { data } = await supabase
+      .from("orulo_buildings")
+      .select("external_id")
+      .eq("external_id", externalId)
+      .maybeSingle();
+    existedBefore = Boolean(data);
+  }
+
+  const raw = asRecord(await oruloGet<unknown>(`/api/v2/buildings/${externalId}`));
+  // Fonte primária de mídia: endpoints dedicados /images e /floor_plans com
+  // dimensions[] — trazem as URLs reais (nome em hash). O array id-only do
+  // detalhe é fallback para mídia antiga (nome de arquivo == id).
+  const rawImages = (Array.isArray(raw.images) ? raw.images : null) as Json;
+  const rawFloorPlans = (
+    Array.isArray(raw.floor_plans) ? raw.floor_plans : null
+  ) as Json;
+  const images = (await fetchBuildingMedia(externalId, "images")) ?? rawImages;
+  const floorPlans =
+    (await fetchBuildingMedia(externalId, "floor_plans")) ?? rawFloorPlans;
+
+  const row = extractBuildingFields(externalId, raw, images, floorPlans);
+  const { error } = await supabase
+    .from("orulo_buildings")
+    .upsert({ ...row, synced_at: new Date().toISOString() }, {
+      onConflict: "external_id",
+    });
+  if (error) throw new OruloError(`Erro ao salvar building ${externalId}.`);
+
+  return {
+    existedBefore,
+    hadImages: Array.isArray(images) && images.length > 0,
+    hadFloorPlans: Array.isArray(floorPlans) && floorPlans.length > 0,
+  };
+}
+
 /**
  * Sincronização manual idempotente (upsert por external_id). Não exclui nada.
  * Registra a execução em orulo_sync_runs (sem secrets/tokens no erro).
@@ -222,35 +285,11 @@ export async function syncOrulo(): Promise<OruloSyncSummary> {
     const existingIds = new Set((existing ?? []).map((r) => r.external_id));
 
     for (const id of ids) {
-      const raw = asRecord(await oruloGet<unknown>(`/api/v2/buildings/${id}`));
-      // Fonte primária de mídia: endpoints dedicados /images e /floor_plans com
-      // dimensions[] — trazem as URLs reais (nome em hash). O array do detalhe
-      // só tem o id numérico (não é mais o nome do arquivo) e serve de fallback
-      // para mídia antiga, cujo nome de arquivo ainda coincide com o id.
-      const rawImages = (Array.isArray(raw.images) ? raw.images : null) as Json;
-      const rawFloorPlans = (
-        Array.isArray(raw.floor_plans) ? raw.floor_plans : null
-      ) as Json;
-      const images = (await fetchBuildingMedia(id, "images")) ?? rawImages;
-      const floorPlans =
-        (await fetchBuildingMedia(id, "floor_plans")) ?? rawFloorPlans;
-
-      if (Array.isArray(images) && images.length > 0) {
-        summary.imagesFetched += 1;
-      }
-      if (Array.isArray(floorPlans) && floorPlans.length > 0) {
-        summary.floorPlansFetched += 1;
-      }
-
-      const row = extractBuildingFields(id, raw, images, floorPlans);
-      const { error } = await supabase
-        .from("orulo_buildings")
-        .upsert({ ...row, synced_at: new Date().toISOString() }, {
-          onConflict: "external_id",
-        });
-      if (error) throw new OruloError(`Erro ao salvar building ${id}.`);
-
-      if (existingIds.has(id)) summary.updated += 1;
+      const { existedBefore, hadImages, hadFloorPlans } =
+        await upsertBuildingById(supabase, id, existingIds);
+      if (hadImages) summary.imagesFetched += 1;
+      if (hadFloorPlans) summary.floorPlansFetched += 1;
+      if (existedBefore) summary.updated += 1;
       else summary.created += 1;
     }
 

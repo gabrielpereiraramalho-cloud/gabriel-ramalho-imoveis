@@ -500,6 +500,9 @@ export type Database = {
           raw: Json;
           images: Json | null;
           floor_plans: Json | null;
+          removed_at: Timestamp | null;
+          last_event_at: Timestamp | null;
+          last_event_status: string | null;
           synced_at: Timestamp;
           created_at: Timestamp;
         };
@@ -529,6 +532,9 @@ export type Database = {
           raw: Json;
           images?: Json | null;
           floor_plans?: Json | null;
+          removed_at?: Timestamp | null;
+          last_event_at?: Timestamp | null;
+          last_event_status?: string | null;
           synced_at?: Timestamp;
           created_at?: Timestamp;
         };
@@ -558,6 +564,9 @@ export type Database = {
           raw?: Json;
           images?: Json | null;
           floor_plans?: Json | null;
+          removed_at?: Timestamp | null;
+          last_event_at?: Timestamp | null;
+          last_event_status?: string | null;
           synced_at?: Timestamp;
           created_at?: Timestamp;
         };
@@ -604,6 +613,42 @@ export type Database = {
           images_fetched?: number | null;
           floor_plans_fetched?: number | null;
           error_summary?: string | null;
+          created_at?: Timestamp;
+        };
+        Relationships: [];
+      };
+      orulo_webhook_events: {
+        Row: {
+          id: string;
+          received_at: Timestamp;
+          event_name: string | null;
+          building_id: string | null;
+          status: string | null;
+          client_id: string | null;
+          outcome: string;
+          detail: string | null;
+          created_at: Timestamp;
+        };
+        Insert: {
+          id?: string;
+          received_at?: Timestamp;
+          event_name?: string | null;
+          building_id?: string | null;
+          status?: string | null;
+          client_id?: string | null;
+          outcome: string;
+          detail?: string | null;
+          created_at?: Timestamp;
+        };
+        Update: {
+          id?: string;
+          received_at?: Timestamp;
+          event_name?: string | null;
+          building_id?: string | null;
+          status?: string | null;
+          client_id?: string | null;
+          outcome?: string;
+          detail?: string | null;
           created_at?: Timestamp;
         };
         Relationships: [];

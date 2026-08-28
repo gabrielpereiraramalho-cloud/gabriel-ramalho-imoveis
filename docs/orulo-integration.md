@@ -19,16 +19,21 @@
 - Formato de `GET /api/v2/config` (chave de "ativo").
 - Fase 6 (card por empreendimento vs. por tipologia) — decidir após ver os dados reais.
 
-## Próxima fase — Webhook (NÃO implementado ainda)
+## Webhook (IMPLEMENTADO)
 
-- **Endpoint sugerido**: `POST /api/orulo/webhook` (route handler server-side).
-- **Autenticidade**: validar assinatura/segredo compartilhado da Órulo (a confirmar na doc) antes de processar; rejeitar sem credencial.
+- **Endpoint**: `POST /api/orulo/webhook` (route handler server-side, runtime Node, `dynamic = "force-dynamic"`). Código: `src/app/api/orulo/webhook/route.ts`, `src/lib/orulo/webhook.ts` (IO) e `src/lib/orulo/webhook-parse.ts` (validação/parsing puros).
+- **Contrato confirmado na doc oficial** (evento `BUILDING_UPDATE`, `Content-Type: application/json`, data `dd/MM/yyyy HH:mm:ss`):
+  - Catálogo (sem `client_id`): `{ "date", "name":"BUILDING_UPDATE", "properties":{ "building_id":123, "status":"active"|"removed" } }`.
+  - Distribuição (com `client_id` = UID da aplicação OAuth = nosso `ORULO_CLIENT_ID`): `properties.status` = `added_to_distribution` | `excluded_from_distribution`.
+- **Autenticidade**: a Órulo **NÃO** documenta assinatura/HMAC do webhook. Protegemos com **segredo compartilhado na URL** (`ORULO_WEBHOOK_SECRET`), aceito via `?token=` ou header `x-webhook-token`, comparado em tempo constante e **fail-closed** (sem o segredo, rejeita). Defesa extra: eventos de distribuição são roteados por `client_id` (só processamos os do nosso `ORULO_CLIENT_ID`; sem `client_id`, tratamos defensivamente como aplicável a todos).
+- **Resposta HTTP**: `200` quando aceito/processado ou ignorado (evento bem-formado não tratado); `400` payload inválido; `401` segredo inválido/ausente; `502` falha de processamento (a Órulo reentrega). A Órulo trata qualquer resposta ≠ 200 (ou timeout) como falha de entrega.
 - **Eventos** e tratamento (idempotente):
-  - `active` / `added_to_distribution` → reprocessar `GET /api/v2/buildings/{id}` (criar/atualizar).
-  - `removed` → **soft delete** / despublicar (não apagar histórico).
-  - `excluded_from_distribution` → remover no escopo da nossa integração (hard delete previsto pela doc).
-- **Consolidação**: eventos muito próximos podem ser agrupados em janela < ~5 min; processar de forma idempotente.
-- **Imagens/plantas em `active`**: comparar IDs de `images`/`floor_plans` do detalhe com os guardados; só rebuscar `/images` e `/floor_plans` se houver ID novo/removido.
+  - `active` / `added_to_distribution` → `upsertBuildingById` (mesmo caminho do sync: detalhe + mídia dos endpoints dedicados com `dimensions[]`, URLs reais em hash). Cria/atualiza por `external_id`, **sem duplicar**. **NUNCA publica automaticamente** (preserva a estratégia atual; SP de homologação segue despublicado). Limpa a marcação `removed_at` ao reaparecer.
+  - `removed` / `excluded_from_distribution` → **soft delete**: `published=false`, limpa `publication_links` na Órulo (quando havia publicação), marca `removed_at`/`last_event_status`. **Não apaga o registro** (preserva histórico; a doc sugere hard delete no escopo da integração para `excluded`, mas optamos por soft delete para manter histórico e o isolamento em `orulo_buildings`).
+- **Idempotência**: upsert por `external_id`; remoção é operação de estado (repetir mantém o mesmo resultado; preserva o 1º carimbo de `removed_at`). Building inexistente em remoção → no-op.
+- **Log durável e seguro**: tabela `orulo_webhook_events` (evento, building_id, status, client_id, outcome, detalhe, data) + log estruturado no console. Sem payload sensível, sem secrets/tokens.
+- **Consolidação/deduplicação temporal** (< ~5 min) e reconciliação periódica (seção 3.4 da doc) continuam como fallback — a reconciliação por cron ainda **não** foi implementada.
+- **Migration**: `supabase/migrations/20260828120000_orulo_webhook.sql` (colunas `removed_at`/`last_event_at`/`last_event_status` + tabela `orulo_webhook_events`, RLS admin-only; gravação do webhook usa a chave secreta do Supabase, que ignora RLS).
 
 ## Próxima fase — Reconciliação periódica (sem cron ainda)
 
