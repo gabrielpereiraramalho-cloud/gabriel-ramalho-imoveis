@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import Link from "next/link";
 
 import { createClient } from "@/lib/supabase/server";
@@ -18,8 +19,23 @@ function money(v: number | string | null): string {
   return Number.isNaN(n) ? "—" : brl.format(n);
 }
 
+// Exibição sempre em America/Sao_Paulo (o banco continua em UTC). A conversão
+// usa timezone IANA — nunca ajuste manual de horas. Formato: 01/09/2026, 07:35:00
+const dateTimeFormatter = new Intl.DateTimeFormat("pt-BR", {
+  timeZone: "America/Sao_Paulo",
+  day: "2-digit",
+  month: "2-digit",
+  year: "numeric",
+  hour: "2-digit",
+  minute: "2-digit",
+  second: "2-digit",
+  hour12: false,
+});
+
 function dateTime(v: string | null): string {
-  return v ? new Date(v).toLocaleString("pt-BR") : "—";
+  if (!v) return "—";
+  const d = new Date(v);
+  return Number.isNaN(d.getTime()) ? "—" : dateTimeFormatter.format(d);
 }
 
 const thCls = "px-3 py-2 text-left font-medium whitespace-nowrap";
@@ -50,29 +66,40 @@ export default async function OruloPage() {
 
   return (
     <main className="flex flex-1 flex-col gap-6 p-8">
-      <div className="flex items-center justify-between gap-4">
-        <h1 className="text-2xl font-semibold tracking-tight">
-          Órulo — integração (teste)
-        </h1>
+      <div className="flex items-start justify-between gap-4">
+        <div className="flex flex-col gap-1">
+          <h1 className="text-2xl font-semibold tracking-tight">
+            Catálogo Órulo
+          </h1>
+          <p className="text-sm text-zinc-500">
+            Integração e sincronização de empreendimentos
+          </p>
+        </div>
         <Link href="/admin" className="text-sm text-zinc-500 hover:underline">
           ← Painel
         </Link>
       </div>
 
       {/* Status */}
-      <section className="grid gap-3 rounded border border-zinc-200 p-4 sm:grid-cols-2 lg:grid-cols-4">
-        <Stat
-          label="Credenciais"
-          value={configured ? "Configurado" : "Não configurado"}
-        />
+      <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <Stat label="Credenciais">
+          <Badge tone={configured ? "positive" : "neutral"}>
+            {configured ? "Configurado" : "Não configurado"}
+          </Badge>
+        </Stat>
         <Stat
           label="Última sincronização"
           value={dateTime(lastRun?.started_at ?? null)}
         />
-        <Stat
-          label="Status da última execução"
-          value={lastRun ? (lastRun.status === "success" ? "Sucesso" : "Erro") : "—"}
-        />
+        <Stat label="Status da última execução">
+          {lastRun ? (
+            <Badge tone={lastRun.status === "success" ? "success" : "error"}>
+              {lastRun.status === "success" ? "Sucesso" : "Erro"}
+            </Badge>
+          ) : (
+            <span className="text-sm font-semibold text-zinc-400">—</span>
+          )}
+        </Stat>
         <Stat label="Empreendimentos no banco" value={String(total)} />
       </section>
 
@@ -101,7 +128,7 @@ export default async function OruloPage() {
       <form action={runOruloSync}>
         <button
           type="submit"
-          className="rounded bg-zinc-900 px-4 py-2 text-sm font-medium text-white"
+          className="inline-flex items-center gap-2 rounded-md bg-zinc-900 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-zinc-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-zinc-900"
         >
           Sincronizar agora
         </button>
@@ -187,11 +214,41 @@ export default async function OruloPage() {
   );
 }
 
-function Stat({ label, value }: { label: string; value: string }) {
+function Stat({
+  label,
+  value,
+  children,
+}: {
+  label: string;
+  value?: string;
+  children?: ReactNode;
+}) {
   return (
-    <div className="flex flex-col">
-      <span className="text-xs text-zinc-500">{label}</span>
-      <span className="font-medium">{value}</span>
+    <div className="flex flex-col gap-2 rounded-lg border border-zinc-200 bg-white p-4">
+      <span className="text-xs font-medium uppercase tracking-wide text-zinc-500">
+        {label}
+      </span>
+      {children ?? (
+        <span className="text-sm font-semibold text-zinc-900">{value}</span>
+      )}
     </div>
+  );
+}
+
+type BadgeTone = "success" | "error" | "positive" | "neutral";
+
+function Badge({ tone, children }: { tone: BadgeTone; children: ReactNode }) {
+  const tones: Record<BadgeTone, string> = {
+    success: "bg-green-50 text-green-700 ring-green-600/20",
+    error: "bg-red-50 text-red-700 ring-red-600/20",
+    positive: "bg-emerald-50 text-emerald-700 ring-emerald-600/20",
+    neutral: "bg-zinc-100 text-zinc-600 ring-zinc-500/20",
+  };
+  return (
+    <span
+      className={`inline-flex w-fit items-center rounded-full px-2.5 py-0.5 text-xs font-medium ring-1 ring-inset ${tones[tone]}`}
+    >
+      {children}
+    </span>
   );
 }
