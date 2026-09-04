@@ -45,23 +45,33 @@ export default async function OruloPage() {
   const configured = isOruloConfigured();
   const supabase = await createClient();
 
-  const [{ data: buildings, error: buildingsError }, { data: runs }] =
-    await Promise.all([
-      supabase
-        .from("orulo_buildings")
-        .select(
-          "external_id, slug, name, city, neighborhood, min_price, status, cover_image_id, images, published, synced_at",
-        )
-        .order("synced_at", { ascending: false })
-        .limit(200),
-      supabase
-        .from("orulo_sync_runs")
-        .select("*")
-        .order("started_at", { ascending: false })
-        .limit(1),
-    ]);
+  const [
+    { data: buildings, error: buildingsError },
+    { data: runs },
+    { data: webhookEvents },
+  ] = await Promise.all([
+    supabase
+      .from("orulo_buildings")
+      .select(
+        "external_id, slug, name, city, neighborhood, min_price, status, cover_image_id, images, published, synced_at",
+      )
+      .order("synced_at", { ascending: false })
+      .limit(200),
+    supabase
+      .from("orulo_sync_runs")
+      .select("*")
+      .order("started_at", { ascending: false })
+      .limit(1),
+    // Apenas leitura do que já está gravado (não chama a API da Órulo).
+    supabase
+      .from("orulo_webhook_events")
+      .select("received_at, outcome, status")
+      .order("received_at", { ascending: false })
+      .limit(1),
+  ]);
 
   const lastRun = runs?.[0] ?? null;
+  const lastWebhook = webhookEvents?.[0] ?? null;
   const total = buildings?.length ?? 0;
 
   return (
@@ -81,20 +91,49 @@ export default async function OruloPage() {
       </div>
 
       {/* Status */}
-      <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+      <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
         <Stat label="Credenciais">
           <Badge tone={configured ? "positive" : "neutral"}>
             {configured ? "Configurado" : "Não configurado"}
           </Badge>
         </Stat>
         <Stat
-          label="Última sincronização"
+          label="Última reconciliação"
           value={dateTime(lastRun?.started_at ?? null)}
+          hint="Sincronização completa (botão “Sincronizar agora”)"
         />
-        <Stat label="Status da última execução">
+        <Stat label="Status da reconciliação">
           {lastRun ? (
             <Badge tone={lastRun.status === "success" ? "success" : "error"}>
               {lastRun.status === "success" ? "Sucesso" : "Erro"}
+            </Badge>
+          ) : (
+            <span className="text-sm font-semibold text-zinc-400">—</span>
+          )}
+        </Stat>
+        <Stat
+          label="Último webhook recebido"
+          hint="Atualização automática recebida da Órulo"
+        >
+          {lastWebhook ? (
+            <>
+              <span className="text-sm font-semibold text-zinc-900">
+                {dateTime(lastWebhook.received_at)}
+              </span>
+              {lastWebhook.status ? (
+                <span className="text-xs text-zinc-400">
+                  evento: {lastWebhook.status}
+                </span>
+              ) : null}
+            </>
+          ) : (
+            <span className="text-sm font-semibold text-zinc-400">—</span>
+          )}
+        </Stat>
+        <Stat label="Status do último webhook">
+          {lastWebhook ? (
+            <Badge tone={outcomeTone(lastWebhook.outcome)}>
+              {outcomeLabel(lastWebhook.outcome)}
             </Badge>
           ) : (
             <span className="text-sm font-semibold text-zinc-400">—</span>
@@ -217,25 +256,54 @@ export default async function OruloPage() {
 function Stat({
   label,
   value,
+  hint,
   children,
 }: {
   label: string;
   value?: string;
+  hint?: string;
   children?: ReactNode;
 }) {
   return (
-    <div className="flex flex-col gap-2 rounded-lg border border-zinc-200 bg-white p-4">
+    <div className="flex flex-col gap-1.5 rounded-lg border border-zinc-200 bg-white p-4">
       <span className="text-xs font-medium uppercase tracking-wide text-zinc-500">
         {label}
       </span>
-      {children ?? (
-        <span className="text-sm font-semibold text-zinc-900">{value}</span>
-      )}
+      <div className="flex flex-col gap-1">
+        {children ?? (
+          <span className="text-sm font-semibold text-zinc-900">{value}</span>
+        )}
+      </div>
+      {hint ? <span className="text-xs text-zinc-400">{hint}</span> : null}
     </div>
   );
 }
 
 type BadgeTone = "success" | "error" | "positive" | "neutral";
+
+// Rótulo/tom legível para o `outcome` do webhook (dados já gravados).
+function outcomeLabel(outcome: string | null): string {
+  switch (outcome) {
+    case "processed":
+      return "Processado";
+    case "ignored":
+      return "Ignorado";
+    case "noop":
+      return "Sem ação";
+    case "error":
+      return "Erro";
+    case null:
+      return "—";
+    default:
+      return outcome.charAt(0).toUpperCase() + outcome.slice(1);
+  }
+}
+
+function outcomeTone(outcome: string | null): BadgeTone {
+  if (outcome === "processed") return "success";
+  if (outcome === "error") return "error";
+  return "neutral";
+}
 
 function Badge({ tone, children }: { tone: BadgeTone; children: ReactNode }) {
   const tones: Record<BadgeTone, string> = {
