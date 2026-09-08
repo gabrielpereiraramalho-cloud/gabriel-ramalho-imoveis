@@ -7,6 +7,8 @@ import type {
   PropertyStatus,
   SolarPosition,
 } from "@/types/database";
+import { slugify } from "@/lib/slug";
+import { normalizeLocation } from "@/lib/catalog/location";
 import { toNum } from "./format";
 
 type Supabase = SupabaseClient<Database>;
@@ -392,7 +394,7 @@ export async function getPropertyFilterOptions(): Promise<PropertyFilterOptions>
   const supabase = await createClient();
   const nowIso = new Date().toISOString();
 
-  const [citiesRes, neighborhoodsRes, typesRes, featuresRes] =
+  const [citiesRes, neighborhoodsRes, typesRes, featuresRes, oruloNbRes] =
     await Promise.all([
       supabase.from("cities").select("id, name, slug, state").order("name"),
       supabase
@@ -408,6 +410,14 @@ export async function getPropertyFilterOptions(): Promise<PropertyFilterOptions>
         .not("published_at", "is", null)
         .lte("published_at", nowIso),
       supabase.from("features").select("id, name, slug").eq("active", true).order("name"),
+      // Bairros dos empreendimentos Órulo realmente no catálogo público
+      // (publicados, na distribuição e não removidos). Texto livre.
+      supabase
+        .from("orulo_buildings")
+        .select("neighborhood")
+        .eq("published", true)
+        .eq("in_distribution", true)
+        .is("removed_at", null),
     ]);
 
   const typeRows = (typesRes.data ?? []) as { property_type: string }[];
@@ -415,12 +425,52 @@ export async function getPropertyFilterOptions(): Promise<PropertyFilterOptions>
     a.localeCompare(b, "pt-BR"),
   );
 
+  const neighborhoods = mergeNeighborhoodOptions(
+    (neighborhoodsRes.data ?? []) as NeighborhoodOption[],
+    ((oruloNbRes.data ?? []) as { neighborhood: string | null }[]).map(
+      (r) => r.neighborhood,
+    ),
+  );
+
   return {
     cities: (citiesRes.data ?? []) as CityOption[],
-    neighborhoods: (neighborhoodsRes.data ?? []) as NeighborhoodOption[],
+    neighborhoods,
     types,
     features: (featuresRes.data ?? []) as FeatureOption[],
   };
+}
+
+/**
+ * Combina os bairros das duas fontes do catálogo público (tabela manual +
+ * texto livre dos empreendimentos Órulo). Deduplica por localização
+ * normalizada (acento/caixa/espaços), preferindo a opção manual quando houver;
+ * preserva o nome legível e ordena alfabeticamente. Não cria bairros fictícios
+ * (só usa os que existem no catálogo) nem edita dados de origem.
+ */
+function mergeNeighborhoodOptions(
+  manual: NeighborhoodOption[],
+  oruloNeighborhoods: (string | null)[],
+): NeighborhoodOption[] {
+  const byKey = new Map<string, NeighborhoodOption>();
+  for (const n of manual) {
+    const key = normalizeLocation(n.name);
+    if (key) byKey.set(key, n);
+  }
+  for (const raw of oruloNeighborhoods) {
+    const name = (raw ?? "").trim();
+    const key = normalizeLocation(name);
+    if (!key || byKey.has(key)) continue;
+    // Origem Órulo: slug derivado do nome; id prefixado para chave única na UI.
+    byKey.set(key, {
+      id: `orulo:${slugify(name)}`,
+      name,
+      slug: slugify(name),
+      city_id: null,
+    });
+  }
+  return [...byKey.values()].sort((a, b) =>
+    a.name.localeCompare(b.name, "pt-BR"),
+  );
 }
 
 /** Busca um imóvel público pelo slug; retorna null se não existir/não público. */
