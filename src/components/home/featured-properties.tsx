@@ -21,16 +21,14 @@ export function FeaturedProperties({
     return <SingleFeature card={items[0]} />;
   }
 
-  // 2 destaques → 2 colunas a partir de sm. 3+ destaques → 1 por linha no
-  // mobile/tablet (cards largos, imagem maior) e 3 colunas só no desktop,
-  // evitando o layout "2 lado a lado + 1 sozinho".
-  const cols = items.length === 2 ? "sm:grid-cols-2" : "lg:grid-cols-3";
+  // Mobile: grade de 2 colunas (cards compactos). 3+ destaques → 3 colunas só
+  // no desktop. O 3º card fica oculto (display:none) abaixo de sm — no mobile
+  // aparecem exatamente 2. Só limita a renderização; a seleção não muda.
+  const cols = items.length === 2 ? "" : "lg:grid-cols-3";
 
   return (
-    <div className={`grid grid-cols-1 gap-6 ${cols}`}>
+    <div className={`grid grid-cols-2 gap-4 sm:gap-6 ${cols}`}>
       {items.map((card, index) => (
-        // No mobile mostramos só 2 destaques (encurta a home); a partir de sm
-        // volta a exibir os 3. Só limita a renderização — a seleção não muda.
         <div key={card.id} className={index >= 2 ? "hidden sm:block" : undefined}>
           <PropertyCard card={card} />
         </div>

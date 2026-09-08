@@ -156,10 +156,11 @@ export default async function Home() {
             </Link>
           </div>
 
-          {/* Grade (sem carrossel). No mobile mostramos só 2 cards largos
-              (encurta a home); a partir de sm volta a exibir os 3. Só limita a
-              renderização — a seleção estável do dia não muda. */}
-          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          {/* Grade (sem carrossel). Mobile: 2 colunas compactas com exatamente
+              2 cards (o 3º fica display:none abaixo de sm). A partir de sm/lg
+              volta a 2/3 colunas. Só limita a renderização — a seleção do dia
+              não muda. */}
+          <div className="grid grid-cols-2 gap-4 sm:gap-6 lg:grid-cols-3">
             {oportunidades.map((item, index) => (
               <div
                 key={item.key}

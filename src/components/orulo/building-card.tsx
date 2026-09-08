@@ -45,34 +45,34 @@ export function BuildingCard({ card }: { card: OruloBuildingCard }) {
             Sem foto
           </div>
         )}
-        <div className="absolute left-3 top-3 flex gap-2">
-          <span className="rounded-full bg-brand-gold px-2.5 py-0.5 text-xs font-semibold text-brand-navy-dark">
+        <div className="absolute left-2 top-2 flex flex-wrap gap-1.5 sm:left-3 sm:top-3 sm:gap-2">
+          <span className="rounded-full bg-brand-gold px-2 py-0.5 text-[11px] font-semibold text-brand-navy-dark sm:px-2.5 sm:text-xs">
             Lançamento
           </span>
           {card.status ? (
-            <span className="rounded-full bg-brand-navy/90 px-2.5 py-0.5 text-xs font-medium text-white">
+            <span className="rounded-full bg-brand-navy/90 px-2 py-0.5 text-[11px] font-medium text-white sm:px-2.5 sm:text-xs">
               {card.status}
             </span>
           ) : null}
         </div>
       </div>
 
-      <div className="flex flex-1 flex-col gap-2 p-5">
-        <h3 className="line-clamp-2 font-serif text-lg text-brand-navy">
+      <div className="flex flex-1 flex-col gap-1.5 p-3 sm:gap-2 sm:p-5">
+        <h3 className="line-clamp-2 font-serif text-base text-brand-navy sm:text-lg">
           {card.name}
         </h3>
         {card.developer ? (
-          <p className="text-xs uppercase tracking-wide text-brand-gold">
+          <p className="line-clamp-1 text-[11px] uppercase tracking-wide text-brand-gold sm:text-xs">
             {card.developer}
           </p>
         ) : null}
-        {meta ? <p className="text-sm text-zinc-500">{meta}</p> : null}
+        {meta ? <p className="text-xs text-zinc-500 sm:text-sm">{meta}</p> : null}
         {[beds, area].filter(Boolean).length > 0 ? (
-          <p className="text-sm text-zinc-600">
+          <p className="text-xs text-zinc-600 sm:text-sm">
             {[beds, area].filter(Boolean).join(" · ")}
           </p>
         ) : null}
-        <span className="mt-auto pt-2 text-lg font-semibold text-brand-navy">
+        <span className="mt-auto pt-1 text-base font-semibold text-brand-navy sm:pt-2 sm:text-lg">
           {priceLabel(card.minPrice)}
         </span>
       </div>
