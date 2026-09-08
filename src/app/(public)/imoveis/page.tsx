@@ -3,11 +3,12 @@ import Link from "next/link";
 
 import {
   getPropertyFilterOptions,
-  listPublicProperties,
   type PropertySearchFilters,
   type PropertySort,
 } from "@/lib/properties/queries";
+import { listPublicCatalog } from "@/lib/catalog/queries";
 import { PropertyCard } from "@/components/property-card";
+import { BuildingCard } from "@/components/orulo/building-card";
 import {
   PropertyFilters,
   type PropertyFiltersValues,
@@ -103,9 +104,9 @@ export default async function ImoveisPage({
     sort,
   };
 
-  const [options, properties] = await Promise.all([
+  const [options, items] = await Promise.all([
     getPropertyFilterOptions(),
-    listPublicProperties(filters),
+    listPublicCatalog(filters),
   ]);
 
   return (
@@ -128,11 +129,11 @@ export default async function ImoveisPage({
       />
 
       <p className="text-sm text-zinc-500">
-        {properties.length}{" "}
-        {properties.length === 1 ? "imóvel encontrado" : "imóveis encontrados"}
+        {items.length}{" "}
+        {items.length === 1 ? "imóvel encontrado" : "imóveis encontrados"}
       </p>
 
-      {properties.length === 0 ? (
+      {items.length === 0 ? (
         <div className="flex flex-col items-start gap-3 rounded-lg border border-zinc-200 bg-white p-6">
           <p className="text-zinc-600">
             Nenhum imóvel encontrado com esses filtros.
@@ -146,9 +147,13 @@ export default async function ImoveisPage({
         </div>
       ) : (
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {properties.map((card) => (
-            <PropertyCard key={card.id} card={card} />
-          ))}
+          {items.map((item) =>
+            item.kind === "building" ? (
+              <BuildingCard key={item.key} card={item.building} />
+            ) : (
+              <PropertyCard key={item.key} card={item.property} />
+            ),
+          )}
         </div>
       )}
     </main>

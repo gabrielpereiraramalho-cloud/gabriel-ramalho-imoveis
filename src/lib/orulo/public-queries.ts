@@ -30,6 +30,7 @@ export type OruloBuildingCard = {
   minArea: number | null;
   maxArea: number | null;
   coverUrl: string | null;
+  publishedAt: string | null;
 };
 
 export type OruloBuildingDetail = OruloBuildingCard & {
@@ -104,6 +105,7 @@ type RowShape = {
   floor_plans: unknown;
   typologies: unknown;
   published: boolean;
+  published_at: string | null;
 };
 
 function mapCard(row: RowShape): OruloBuildingCard {
@@ -133,6 +135,7 @@ function mapCard(row: RowShape): OruloBuildingCard {
     minArea: n(row.private_area),
     maxArea: n(row.max_area),
     coverUrl: cover,
+    publishedAt: row.published_at,
   };
 }
 

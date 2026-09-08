@@ -34,6 +34,7 @@ export type PropertyCard = {
   neighborhoodId: string | null;
   neighborhoodName: string | null;
   coverUrl: string | null;
+  createdAt: string | null;
 };
 
 export type PropertyImage = { url: string; alt: string };
@@ -110,6 +111,7 @@ type RawCardRow = {
   suites: number;
   parking_spaces: number;
   neighborhood_id: string | null;
+  created_at: string | null;
   cities: RawCity;
   neighborhoods: RawNeighborhood;
   property_images: RawEmbedImage[];
@@ -141,7 +143,7 @@ type RawDetailRow = RawCardRow & {
 };
 
 const CARD_COLUMNS =
-  "id, slug, title, tag, purpose, status, sale_price, rent_price, private_area, bedrooms, suites, parking_spaces, neighborhood_id, cities(name, state), neighborhoods(name), property_images(storage_path, alt_text, sort_order, is_cover)";
+  "id, slug, title, tag, purpose, status, sale_price, rent_price, private_area, bedrooms, suites, parking_spaces, neighborhood_id, created_at, cities(name, state), neighborhoods(name), property_images(storage_path, alt_text, sort_order, is_cover)";
 
 const DETAIL_COLUMNS = `${CARD_COLUMNS}, code, description, property_type, condominium_fee, iptu, accepts_financing, total_area, external_area, bathrooms, floor, solar_position, address, address_number, complement, postal_code, show_exact_address, youtube_url, instagram_url, virtual_tour_url, property_features(features(name, slug, category))`;
 
@@ -180,6 +182,7 @@ function mapCard(supabase: Supabase, row: RawCardRow): PropertyCard {
     neighborhoodId: row.neighborhood_id,
     neighborhoodName: row.neighborhoods?.name ?? null,
     coverUrl: coverPath ? publicUrl(supabase, coverPath) : null,
+    createdAt: row.created_at,
   };
 }
 
