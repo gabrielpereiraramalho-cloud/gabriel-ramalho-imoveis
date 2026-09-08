@@ -23,7 +23,7 @@ export default async function EmpreendimentosPage() {
   const buildings = await listPublishedBuildings();
 
   return (
-    <main className="mx-auto flex w-full max-w-7xl flex-1 flex-col gap-6 px-4 py-10">
+    <main className="mx-auto flex w-full max-w-[1440px] flex-1 flex-col gap-6 px-4 py-10">
       <header className="flex flex-col gap-2">
         <span className="text-xs font-semibold uppercase tracking-[0.2em] text-brand-gold">
           Lançamentos

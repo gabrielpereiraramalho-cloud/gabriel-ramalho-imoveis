@@ -7,7 +7,7 @@ export default function NotFound() {
   return (
     <div className="flex min-h-screen flex-col bg-offwhite text-zinc-900">
       <SiteHeader />
-      <main className="mx-auto flex w-full max-w-7xl flex-1 flex-col items-center justify-center gap-6 px-4 py-20 text-center">
+      <main className="mx-auto flex w-full max-w-[1440px] flex-1 flex-col items-center justify-center gap-6 px-4 py-20 text-center">
         <span className="text-xs font-semibold uppercase tracking-[0.2em] text-brand-gold">
           Erro 404
         </span>

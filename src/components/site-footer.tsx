@@ -30,7 +30,7 @@ export function SiteFooter() {
 
   return (
     <footer className="bg-brand-navy-dark text-offwhite">
-      <div className="mx-auto grid w-full max-w-7xl gap-6 px-4 py-8 sm:grid-cols-2 sm:gap-8 sm:py-12 lg:grid-cols-3">
+      <div className="mx-auto grid w-full max-w-[1440px] gap-6 px-4 py-8 sm:grid-cols-2 sm:gap-8 sm:py-12 lg:grid-cols-3">
         <div className="flex flex-col gap-1">
           <span className="font-serif text-xl font-semibold">
             {siteConfig.brand}
@@ -95,7 +95,7 @@ export function SiteFooter() {
       </div>
 
       <div className="border-t border-white/10">
-        <p className="mx-auto w-full max-w-7xl px-4 py-4 text-xs text-offwhite/60">
+        <p className="mx-auto w-full max-w-[1440px] px-4 py-4 text-xs text-offwhite/60">
           © {year} {siteConfig.brand} · {siteConfig.role}
         </p>
       </div>

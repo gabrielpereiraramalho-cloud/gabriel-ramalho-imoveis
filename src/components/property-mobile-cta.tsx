@@ -36,7 +36,7 @@ export function PropertyMobileCta({
         paddingBottom: "calc(0.625rem + env(safe-area-inset-bottom))",
       }}
     >
-      <div className="mx-auto flex max-w-7xl items-center justify-between gap-3 px-4 pt-2.5">
+      <div className="mx-auto flex max-w-[1440px] items-center justify-between gap-3 px-4 pt-2.5">
         <span className="text-lg font-semibold text-brand-navy">
           {priceLabel}
         </span>

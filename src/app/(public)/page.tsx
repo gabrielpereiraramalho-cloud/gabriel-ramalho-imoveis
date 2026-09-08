@@ -120,7 +120,7 @@ export default async function Home() {
 
       {/* Faixa 1 — Imóveis em destaque (fixos, marcados no admin) */}
       {destaques.length > 0 ? (
-        <section className="mx-auto w-full max-w-7xl px-4 pb-8 pt-20 sm:px-6 lg:px-8">
+        <section className="mx-auto w-full max-w-[1440px] px-4 pb-8 pt-20 sm:px-6 lg:px-8">
           <div className="mb-8 flex flex-wrap items-end justify-between gap-4">
             <div className="flex flex-col gap-2">
               <span className="text-xs font-semibold uppercase tracking-widest text-brand-gold">
@@ -138,7 +138,7 @@ export default async function Home() {
 
       {/* Faixa 2 — Oportunidades para você (variáveis, estáveis por dia) */}
       {oportunidades.length > 0 ? (
-        <section className="mx-auto w-full max-w-7xl px-4 pb-16 pt-8 sm:px-6 lg:px-8">
+        <section className="mx-auto w-full max-w-[1440px] px-4 pb-16 pt-8 sm:px-6 lg:px-8">
           <div className="mb-8 flex flex-wrap items-end justify-between gap-4">
             <div className="flex flex-col gap-2">
               <span className="text-xs font-semibold uppercase tracking-widest text-brand-gold">

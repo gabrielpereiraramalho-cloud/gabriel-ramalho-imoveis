@@ -24,13 +24,13 @@ function BrandLogo() {
         // A arte ocupa apenas ~1383x285 do canvas 1600x900 (muita margem
         // transparente). O wrapper recorta o excesso e o object-cover +
         // object-position ampliam a arte, mantendo a proporção sem cortá-la.
-        <span className="relative block h-10 w-[190px] overflow-hidden sm:h-14 sm:w-[280px]">
+        <span className="relative block h-11 w-[210px] overflow-hidden sm:h-14 sm:w-[280px] lg:h-[72px] lg:w-[380px]">
           <Image
             src="/logo-gabriel-ramalho.png"
             alt="Gabriel Ramalho — Corretor de Imóveis"
             fill
             priority
-            sizes="280px"
+            sizes="(min-width: 1024px) 380px, 280px"
             onError={() => setImgOk(false)}
             className="object-cover object-[50%_46%]"
           />
@@ -57,7 +57,7 @@ export function SiteHeader() {
 
   return (
     <header className="sticky top-0 z-50 border-b border-zinc-200/70 bg-offwhite/85 backdrop-blur supports-[backdrop-filter]:bg-offwhite/70">
-      <div className="mx-auto flex w-full max-w-7xl items-center justify-between gap-4 px-4 py-3 sm:px-6 lg:px-8">
+      <div className="mx-auto flex w-full max-w-[1440px] items-center justify-between gap-4 px-4 py-3 sm:px-6 lg:px-8 lg:py-4">
         <BrandLogo />
 
         <nav className="hidden items-center gap-8 lg:flex">
@@ -113,7 +113,7 @@ export function SiteHeader() {
 
       {open ? (
         <nav className="border-t border-zinc-200/70 bg-offwhite lg:hidden">
-          <ul className="mx-auto flex w-full max-w-7xl flex-col px-4 py-2">
+          <ul className="mx-auto flex w-full max-w-[1440px] flex-col px-4 py-2">
             {NAV_LINKS.map((link) => (
               <li key={link.href}>
                 <Link

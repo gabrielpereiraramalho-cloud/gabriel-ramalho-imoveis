@@ -3,7 +3,7 @@ import Link from "next/link";
 export function SellCta() {
   return (
     <section className="bg-brand-navy text-offwhite">
-      <div className="mx-auto flex w-full max-w-7xl flex-col items-start gap-4 px-4 py-14 lg:flex-row lg:items-center lg:justify-between">
+      <div className="mx-auto flex w-full max-w-[1440px] flex-col items-start gap-4 px-4 py-14 sm:px-6 lg:flex-row lg:items-center lg:justify-between lg:px-8">
         <div className="flex flex-col gap-2">
           <h2 className="font-serif text-2xl font-semibold sm:text-3xl">
             Quer vender seu imóvel?

@@ -28,17 +28,17 @@ export function Hero({
 
   return (
     <section className="bg-offwhite">
-      <div className="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="grid items-center gap-10 py-12 lg:min-h-[560px] lg:grid-cols-2 lg:py-16">
+      <div className="mx-auto w-full max-w-[1440px] px-4 sm:px-6 lg:px-8">
+        <div className="grid items-center gap-10 py-12 lg:min-h-[600px] lg:grid-cols-[1fr_1.05fr] lg:gap-14 lg:py-20">
           {/* Texto */}
           <div className="flex flex-col gap-6">
             <span className="text-xs font-semibold uppercase tracking-[0.2em] text-brand-gold">
               Imóveis em João Pessoa e região
             </span>
-            <h1 className="font-serif text-4xl font-semibold leading-tight text-brand-navy sm:text-5xl">
+            <h1 className="font-serif text-4xl font-semibold leading-tight text-brand-navy sm:text-5xl lg:text-6xl">
               Encontre seu próximo imóvel em João Pessoa.
             </h1>
-            <p className="max-w-xl text-base text-zinc-600 sm:text-lg">
+            <p className="max-w-xl text-base text-zinc-600 sm:text-lg lg:max-w-2xl">
               Uma seleção de imóveis para morar, investir e viver bem nas
               melhores regiões da cidade.
             </p>

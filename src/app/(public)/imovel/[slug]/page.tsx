@@ -212,7 +212,7 @@ export default async function ImovelPage({ params }: Params) {
   };
 
   return (
-    <main className="mx-auto flex w-full max-w-7xl flex-1 flex-col gap-10 px-4 py-10">
+    <main className="mx-auto flex w-full max-w-[1440px] flex-1 flex-col gap-10 px-4 py-10">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: jsonLdScript(propertyJsonLd(property)) }}
