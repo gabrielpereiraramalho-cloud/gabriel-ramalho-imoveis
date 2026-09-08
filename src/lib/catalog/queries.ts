@@ -7,7 +7,12 @@ import {
   listPublishedBuildings,
   type OruloBuildingCard,
 } from "@/lib/orulo/public-queries";
-import { cityMatchesAny, neighborhoodMatchesAny } from "./location";
+import { slugify } from "@/lib/slug";
+import {
+  cityMatchesAny,
+  neighborhoodMatchesAny,
+  normalizeLocation,
+} from "./location";
 
 /**
  * Catálogo público UNIFICADO: imóveis manuais (`properties`) + empreendimentos
@@ -149,6 +154,44 @@ export async function listPublicCatalog(
 
   sortCatalog(items, filters.sort);
   return items;
+}
+
+export type NeighborhoodOffer = { name: string; slug: string; count: number };
+
+/**
+ * Agrega as ofertas do catálogo unificado POR BAIRRO. Cada oferta (imóvel
+ * manual ou empreendimento) conta uma única vez, no grupo do seu bairro
+ * literal, deduplicado pela MESMA normalização do filtro (acento/caixa/espaços/
+ * pontuação). Retorna os `limit` bairros com mais ofertas (empate → alfabético).
+ *
+ * Bairros compostos (ex.: "Altiplano Cabo Branco"): o empreendimento pertence
+ * ao grupo do seu bairro literal — não é contado também em "Altiplano" nem em
+ * "Cabo Branco" — evitando cartões duplicados e contagem em dobro. O link usa o
+ * slug desse bairro e o filtro (matching por tokens) mostra um conjunto coerente.
+ */
+export function aggregateNeighborhoodOffers(
+  items: CatalogItem[],
+  limit = 10,
+): NeighborhoodOffer[] {
+  const map = new Map<string, { name: string; count: number }>();
+  for (const it of items) {
+    const raw =
+      it.kind === "property"
+        ? it.property.neighborhoodName
+        : it.building.neighborhood;
+    const name = (raw ?? "").trim();
+    const key = normalizeLocation(name);
+    if (!key) continue; // sem bairro → não agrupa
+    const cur = map.get(key);
+    if (cur) cur.count += 1;
+    else map.set(key, { name, count: 1 });
+  }
+  return [...map.values()]
+    .map((v) => ({ name: v.name, slug: slugify(v.name), count: v.count }))
+    .sort(
+      (a, b) => b.count - a.count || a.name.localeCompare(b.name, "pt-BR"),
+    )
+    .slice(0, limit);
 }
 
 // FNV-1a (32 bits) — hash estável e determinístico para seleção diária.

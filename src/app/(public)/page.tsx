@@ -5,7 +5,11 @@ import {
   getPropertyFilterOptions,
   listPublicProperties,
 } from "@/lib/properties/queries";
-import { listPublicCatalog, pickDailyItems } from "@/lib/catalog/queries";
+import {
+  aggregateNeighborhoodOffers,
+  listPublicCatalog,
+  pickDailyItems,
+} from "@/lib/catalog/queries";
 import {
   absoluteUrl,
   defaultOgImage,
@@ -96,6 +100,9 @@ export default async function Home() {
   }).format(new Date());
   const oportunidades = pickDailyItems(pool, 3, daySeed);
 
+  // "Encontre por localização" — top 10 bairros por nº de ofertas (catálogo).
+  const bairros = aggregateNeighborhoodOffers(catalog, 10);
+
   return (
     <main className="flex flex-col">
       <script
@@ -161,7 +168,7 @@ export default async function Home() {
         </section>
       ) : null}
 
-      <NeighborhoodsSection />
+      <NeighborhoodsSection bairros={bairros} />
       <SellCta />
       <AboutSection />
     </main>
