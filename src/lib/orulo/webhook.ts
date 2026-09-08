@@ -74,10 +74,12 @@ async function handleUpsert(
 }
 
 /**
- * removed / excluded_from_distribution → SOFT DELETE: despublica no nosso site,
- * limpa publication_links na Órulo (quando havia publicação) e marca removed_at.
+ * excluded_from_distribution → despublica, limpa publication_links e
+ * in_distribution=false (saída da distribuição desta integração; NÃO marca
+ * removed_at, pois o empreendimento pode seguir no catálogo).
+ * removed → o mesmo, e ADICIONALMENTE marca removed_at (saiu do catálogo).
  * NUNCA apaga o registro (preserva histórico). Idempotente: repetir mantém o
- * mesmo estado e preserva o primeiro carimbo de removed_at.
+ * estado e preserva o primeiro carimbo de removed_at.
  */
 async function handleRemoval(
   supabase: Db,
@@ -108,13 +110,16 @@ async function handleRemoval(
   }
 
   const nowIso = new Date().toISOString();
+  const isRemoved = event.status === "removed";
   const { error } = await supabase
     .from("orulo_buildings")
     .update({
       published: false,
       published_at: null,
-      removed_at: b.removed_at ?? nowIso,
       in_distribution: false,
+      // Só `removed` marca removed_at (saída do catálogo). `excluded` é apenas
+      // saída da distribuição desta integração.
+      ...(isRemoved ? { removed_at: b.removed_at ?? nowIso } : {}),
       last_event_at: nowIso,
       last_event_status: event.status,
     })

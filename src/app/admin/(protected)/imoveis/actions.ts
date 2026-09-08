@@ -235,7 +235,18 @@ export async function deleteProperty(id: string): Promise<void> {
 }
 
 export async function setFeatured(id: string, next: boolean): Promise<void> {
+  const MAX_FEATURED = 3;
   const supabase = await createClient();
+  // Ao marcar, respeita o teto de destaques (a home mostra no máximo 3).
+  if (next) {
+    const { count } = await supabase
+      .from("properties")
+      .select("id", { count: "exact", head: true })
+      .eq("featured", true);
+    if ((count ?? 0) >= MAX_FEATURED) {
+      redirect("/admin/imoveis?destaque=limite");
+    }
+  }
   await supabase.from("properties").update({ featured: next }).eq("id", id);
   revalidatePath("/admin/imoveis");
 }

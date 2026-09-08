@@ -150,3 +150,31 @@ export async function listPublicCatalog(
   sortCatalog(items, filters.sort);
   return items;
 }
+
+// FNV-1a (32 bits) — hash estável e determinístico para seleção diária.
+function hashStr(s: string): number {
+  let h = 0x811c9dc5;
+  for (let i = 0; i < s.length; i++) {
+    h ^= s.charCodeAt(i);
+    h = Math.imul(h, 0x01000193);
+  }
+  return h >>> 0;
+}
+
+/**
+ * Seleção pseudoaleatória ESTÁVEL POR SEED (ex.: a data em America/Sao_Paulo):
+ * ordena por hash(seed|key) e pega os primeiros `count`. Determinística — no
+ * mesmo dia retorna sempre os mesmos itens; muda quando o seed muda. Não usa
+ * random nem estado do navegador.
+ */
+export function pickDailyItems<T extends { key: string }>(
+  items: T[],
+  count: number,
+  seed: string,
+): T[] {
+  return [...items]
+    .map((it) => ({ it, h: hashStr(`${seed}|${it.key}`) }))
+    .sort((a, b) => a.h - b.h || (a.it.key < b.it.key ? -1 : 1))
+    .slice(0, count)
+    .map((x) => x.it);
+}

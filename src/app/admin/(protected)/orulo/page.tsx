@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 import Link from "next/link";
 
 import { createClient } from "@/lib/supabase/server";
-import { isOruloConfigured } from "@/lib/orulo/config";
+import { isOruloConfigured, isOruloAutoPublishEnabled } from "@/lib/orulo/config";
 import { checkEligibility } from "@/lib/orulo/eligibility";
 import { runOruloSync } from "./actions";
 import { PublishControls } from "./publish-controls";
@@ -111,6 +111,7 @@ export default async function OruloPage() {
   const total = totalCount ?? 0;
   const removed = removedCount ?? 0;
   const pending = pendingCount ?? 0;
+  const autoPublish = isOruloAutoPublishEnabled();
 
   return (
     <main className="flex flex-1 flex-col gap-6 p-8">
@@ -122,6 +123,12 @@ export default async function OruloPage() {
           <p className="text-sm text-zinc-500">
             Integração e sincronização de empreendimentos
           </p>
+          {/* Indicador read-only da flag ORULO_AUTO_PUBLISH (sem botão). */}
+          <span className="mt-1">
+            <Badge tone={autoPublish ? "success" : "neutral"}>
+              Auto-publicação: {autoPublish ? "Ativa" : "Desativada"}
+            </Badge>
+          </span>
         </div>
         <Link href="/admin" className="text-sm text-zinc-500 hover:underline">
           ← Painel

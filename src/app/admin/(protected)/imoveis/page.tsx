@@ -31,10 +31,11 @@ const tdCls = "px-3 py-2 whitespace-nowrap";
 export default async function ImoveisPage({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string }>;
+  searchParams: Promise<{ q?: string; destaque?: string }>;
 }) {
-  const { q } = await searchParams;
+  const { q, destaque } = await searchParams;
   const term = (q ?? "").trim();
+  const destaqueLimite = destaque === "limite";
 
   const supabase = await createClient();
 
@@ -87,6 +88,13 @@ export default async function ImoveisPage({
           </Link>
         ) : null}
       </form>
+
+      {destaqueLimite ? (
+        <p className="rounded border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-800">
+          Máximo de {3} imóveis em destaque atingido. Desmarque um antes de
+          adicionar outro.
+        </p>
+      ) : null}
 
       {error ? (
         <p className="text-sm text-red-600">
