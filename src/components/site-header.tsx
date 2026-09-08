@@ -24,7 +24,7 @@ function BrandLogo() {
         // A arte ocupa apenas ~1383x285 do canvas 1600x900 (muita margem
         // transparente). O wrapper recorta o excesso e o object-cover +
         // object-position ampliam a arte, mantendo a proporção sem cortá-la.
-        <span className="relative block h-11 w-[210px] overflow-hidden sm:h-14 sm:w-[280px] lg:h-[72px] lg:w-[380px]">
+        <span className="relative block h-12 w-[232px] overflow-hidden sm:h-14 sm:w-[280px] lg:h-[72px] lg:w-[380px]">
           <Image
             src="/logo-gabriel-ramalho.png"
             alt="Gabriel Ramalho — Corretor de Imóveis"

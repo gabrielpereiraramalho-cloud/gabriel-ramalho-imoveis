@@ -122,7 +122,7 @@ export function HeroShowcase({ items }: { items: PropertyCard[] }) {
 
   return (
     <div
-      className="relative aspect-[4/3] w-full overflow-hidden rounded-lg ring-1 ring-brand-navy/10 lg:aspect-[5/4]"
+      className="relative aspect-[16/10] w-full overflow-hidden rounded-lg ring-1 ring-brand-navy/10 sm:aspect-[4/3] lg:aspect-[5/4]"
       onTouchStart={hasMultiple ? onTouchStart : undefined}
       onTouchEnd={hasMultiple ? onTouchEnd : undefined}
       onClickCapture={onClickCapture}

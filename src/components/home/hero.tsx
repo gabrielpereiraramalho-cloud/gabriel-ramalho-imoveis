@@ -29,7 +29,7 @@ export function Hero({
   return (
     <section className="bg-offwhite">
       <div className="mx-auto w-full max-w-[1440px] px-4 sm:px-6 lg:px-8">
-        <div className="grid items-center gap-10 py-12 lg:min-h-[600px] lg:grid-cols-[1fr_1.05fr] lg:gap-14 lg:py-20">
+        <div className="grid items-center gap-6 py-8 sm:gap-10 sm:py-12 lg:min-h-[600px] lg:grid-cols-[1fr_1.05fr] lg:gap-14 lg:py-20">
           {/* Texto */}
           <div className="flex flex-col gap-6">
             <span className="text-xs font-semibold uppercase tracking-[0.2em] text-brand-gold">
@@ -65,7 +65,7 @@ export function Hero({
           {featured.length > 0 ? (
             <HeroShowcase items={featured} />
           ) : (
-            <div className="relative aspect-[4/3] w-full overflow-hidden rounded-lg ring-1 ring-brand-navy/10 lg:aspect-[5/4]">
+            <div className="relative aspect-[16/10] w-full overflow-hidden rounded-lg ring-1 ring-brand-navy/10 sm:aspect-[4/3] lg:aspect-[5/4]">
               <HeroImage />
             </div>
           )}

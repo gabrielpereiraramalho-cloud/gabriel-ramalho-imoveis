@@ -21,10 +21,10 @@ export function FeaturedProperties({
     return <SingleFeature card={items[0]} />;
   }
 
-  const cols =
-    items.length === 2
-      ? "sm:grid-cols-2"
-      : "sm:grid-cols-2 lg:grid-cols-3";
+  // 2 destaques → 2 colunas a partir de sm. 3+ destaques → 1 por linha no
+  // mobile/tablet (cards largos, imagem maior) e 3 colunas só no desktop,
+  // evitando o layout "2 lado a lado + 1 sozinho".
+  const cols = items.length === 2 ? "sm:grid-cols-2" : "lg:grid-cols-3";
 
   return (
     <div className={`grid grid-cols-1 gap-6 ${cols}`}>

@@ -14,9 +14,9 @@ export function AboutSection() {
 
   return (
     <section id="sobre" className="scroll-mt-24 bg-white">
-      <div className="mx-auto grid w-full max-w-[1440px] gap-10 px-4 py-16 sm:px-6 lg:grid-cols-2 lg:items-center lg:gap-14 lg:px-8">
+      <div className="mx-auto grid w-full max-w-[1440px] gap-6 px-4 py-12 sm:gap-10 sm:px-6 sm:py-16 lg:grid-cols-2 lg:items-center lg:gap-14 lg:px-8">
         {/* Imagem (aparece primeiro no mobile) */}
-        <div className="relative mx-auto aspect-[3/4] w-full max-w-sm overflow-hidden rounded-lg bg-offwhite ring-1 ring-brand-navy/10 lg:mx-0">
+        <div className="relative mx-auto aspect-[4/5] w-full max-w-[260px] overflow-hidden rounded-lg bg-offwhite ring-1 ring-brand-navy/10 sm:aspect-[3/4] sm:max-w-sm lg:mx-0">
           <AboutPhoto />
         </div>
 

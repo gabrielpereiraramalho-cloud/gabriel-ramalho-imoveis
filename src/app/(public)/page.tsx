@@ -120,7 +120,7 @@ export default async function Home() {
 
       {/* Faixa 1 — Imóveis em destaque (fixos, marcados no admin) */}
       {destaques.length > 0 ? (
-        <section className="mx-auto w-full max-w-[1440px] px-4 pb-8 pt-20 sm:px-6 lg:px-8">
+        <section className="mx-auto w-full max-w-[1440px] px-4 pb-6 pt-12 sm:px-6 sm:pb-8 sm:pt-20 lg:px-8">
           <div className="mb-8 flex flex-wrap items-end justify-between gap-4">
             <div className="flex flex-col gap-2">
               <span className="text-xs font-semibold uppercase tracking-widest text-brand-gold">
@@ -138,7 +138,7 @@ export default async function Home() {
 
       {/* Faixa 2 — Oportunidades para você (variáveis, estáveis por dia) */}
       {oportunidades.length > 0 ? (
-        <section className="mx-auto w-full max-w-[1440px] px-4 pb-16 pt-8 sm:px-6 lg:px-8">
+        <section className="mx-auto w-full max-w-[1440px] px-4 pb-12 pt-8 sm:px-6 sm:pb-16 lg:px-8">
           <div className="mb-8 flex flex-wrap items-end justify-between gap-4">
             <div className="flex flex-col gap-2">
               <span className="text-xs font-semibold uppercase tracking-widest text-brand-gold">
@@ -156,14 +156,21 @@ export default async function Home() {
             </Link>
           </div>
 
-          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {oportunidades.map((item) =>
-              item.kind === "building" ? (
-                <BuildingCard key={item.key} card={item.building} />
-              ) : (
-                <PropertyCard key={item.key} card={item.property} />
-              ),
-            )}
+          {/* Mobile: carrossel horizontal com peek do próximo card (CSS
+              scroll-snap, swipe nativo, sem autoplay). Desktop: grade normal. */}
+          <div className="-mx-4 flex snap-x snap-mandatory gap-4 overflow-x-auto px-4 pb-2 [scrollbar-width:none] sm:mx-0 sm:grid sm:snap-none sm:grid-cols-2 sm:gap-6 sm:overflow-visible sm:px-0 sm:pb-0 lg:grid-cols-3">
+            {oportunidades.map((item) => (
+              <div
+                key={item.key}
+                className="w-[82%] shrink-0 snap-start sm:w-auto sm:shrink"
+              >
+                {item.kind === "building" ? (
+                  <BuildingCard card={item.building} />
+                ) : (
+                  <PropertyCard card={item.property} />
+                )}
+              </div>
+            ))}
           </div>
         </section>
       ) : null}
