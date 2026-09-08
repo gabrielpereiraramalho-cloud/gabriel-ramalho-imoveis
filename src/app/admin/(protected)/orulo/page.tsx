@@ -45,18 +45,30 @@ export default async function OruloPage() {
   const configured = isOruloConfigured();
   const supabase = await createClient();
 
+  // Contagens reais via count exato (head=true não traz linhas).
+  const countBase = () =>
+    supabase.from("orulo_buildings").select("external_id", {
+      count: "exact",
+      head: true,
+    });
+
   const [
     { data: buildings, error: buildingsError },
     { data: runs },
     { data: webhookEvents },
+    { count: totalCount },
+    { count: publishedCount },
+    { count: removedCount },
+    { count: inDistributionCount },
+    { count: eligibleCount },
   ] = await Promise.all([
     supabase
       .from("orulo_buildings")
       .select(
-        "external_id, slug, name, city, neighborhood, min_price, status, cover_image_id, images, published, synced_at",
+        "external_id, slug, name, city, neighborhood, min_price, status, cover_image_id, images, published, removed_at, in_distribution, synced_at",
       )
       .order("synced_at", { ascending: false })
-      .limit(200),
+      .limit(1000),
     supabase
       .from("orulo_sync_runs")
       .select("*")
@@ -68,11 +80,26 @@ export default async function OruloPage() {
       .select("received_at, outcome, status")
       .order("received_at", { ascending: false })
       .limit(1),
+    countBase(),
+    countBase().eq("published", true),
+    countBase().not("removed_at", "is", null),
+    countBase().eq("in_distribution", true),
+    // Elegíveis por conteúdo (aproxima checkEligibility em SQL): campos
+    // essenciais presentes, preço > 0 e ao menos uma imagem.
+    countBase()
+      .not("name", "is", null)
+      .not("city", "is", null)
+      .not("neighborhood", "is", null)
+      .not("status", "is", null)
+      .gt("min_price", 0)
+      .not("cover_image_id", "is", null),
   ]);
 
   const lastRun = runs?.[0] ?? null;
   const lastWebhook = webhookEvents?.[0] ?? null;
-  const total = buildings?.length ?? 0;
+  const total = totalCount ?? 0;
+  const removed = removedCount ?? 0;
+  const activeCount = total - removed;
 
   return (
     <main className="flex flex-1 flex-col gap-6 p-8">
@@ -139,7 +166,16 @@ export default async function OruloPage() {
             <span className="text-sm font-semibold text-zinc-400">—</span>
           )}
         </Stat>
-        <Stat label="Empreendimentos no banco" value={String(total)} />
+      </section>
+
+      {/* Contagens reais (count exato no banco, não limitado pela listagem) */}
+      <section className="grid gap-3 grid-cols-2 sm:grid-cols-3 lg:grid-cols-6">
+        <Stat label="Total no banco" value={String(total)} />
+        <Stat label="Ativos" value={String(activeCount)} hint="Não removidos" />
+        <Stat label="Em distribuição" value={String(inDistributionCount ?? 0)} />
+        <Stat label="Elegíveis" value={String(eligibleCount ?? 0)} hint="Conteúdo ok" />
+        <Stat label="Publicados" value={String(publishedCount ?? 0)} />
+        <Stat label="Removidos" value={String(removed)} />
       </section>
 
       {!configured ? (

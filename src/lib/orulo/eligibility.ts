@@ -38,3 +38,23 @@ export function checkEligibility(input: EligibilityInput): Eligibility {
   // Origem Órulo é garantida (tabela orulo_buildings).
   return { eligible: reasons.length === 0, reasons };
 }
+
+/**
+ * Gate de PUBLICAÇÃO (manual ou automática). Além da elegibilidade de conteúdo,
+ * exige que o empreendimento:
+ *   • NÃO esteja removido (removed_at IS NULL);
+ *   • esteja DENTRO da distribuição desta aplicação (in_distribution = true).
+ * Isso impede publicar a homologação antiga (fora da distribuição) e removidos.
+ */
+export type PublishGateInput = EligibilityInput & {
+  removed_at: string | null;
+  in_distribution: boolean;
+};
+
+export function canAutoPublish(input: PublishGateInput): Eligibility {
+  const reasons: string[] = [];
+  if (input.removed_at) reasons.push("removido");
+  if (!input.in_distribution) reasons.push("fora da distribuição");
+  reasons.push(...checkEligibility(input).reasons);
+  return { eligible: reasons.length === 0, reasons };
+}

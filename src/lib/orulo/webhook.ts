@@ -29,8 +29,9 @@ export type WebhookOutcome = {
 /**
  * active / added_to_distribution → (re)sincroniza o empreendimento (criar ou
  * atualizar por external_id, sem duplicar). NUNCA publica automaticamente: o
- * estado de publicação é preservado (mantém a estratégia atual e os 40 de SP
- * despublicados). Ao reaparecer, limpa a marcação de removido.
+ * estado de publicação é preservado. Ao reaparecer, limpa a marcação de
+ * removido. `added_to_distribution` marca in_distribution=true (entrada na
+ * distribuição desta aplicação); `active` NÃO altera a distribuição.
  */
 async function handleUpsert(
   supabase: Db,
@@ -43,6 +44,9 @@ async function handleUpsert(
       removed_at: null,
       last_event_at: new Date().toISOString(),
       last_event_status: event.status,
+      ...(event.status === "added_to_distribution"
+        ? { in_distribution: true }
+        : {}),
     })
     .eq("external_id", event.buildingId);
   if (error) {
@@ -97,6 +101,7 @@ async function handleRemoval(
       published: false,
       published_at: null,
       removed_at: b.removed_at ?? nowIso,
+      in_distribution: false,
       last_event_at: nowIso,
       last_event_status: event.status,
     })

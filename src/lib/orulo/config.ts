@@ -15,6 +15,17 @@ export function isOruloConfigured(): boolean {
   return Boolean(oruloConfig.clientId && oruloConfig.clientSecret);
 }
 
+/**
+ * Flag de PUBLICAÇÃO AUTOMÁTICA (default DESLIGADA). Enquanto off, nada é
+ * publicado automaticamente — a publicação continua sendo manual pelo admin.
+ * Só será consultada pelos fluxos automáticos (webhook/reconciliação) quando
+ * estes forem habilitados, após validação manual.
+ */
+export function isOruloAutoPublishEnabled(): boolean {
+  const v = (process.env.ORULO_AUTO_PUBLISH ?? "").trim().toLowerCase();
+  return v === "1" || v === "true" || v === "on" || v === "yes";
+}
+
 /** Erro da integração — mensagens sempre sem secrets/tokens. */
 export class OruloError extends Error {
   constructor(message: string) {

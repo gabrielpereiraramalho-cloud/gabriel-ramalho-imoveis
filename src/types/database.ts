@@ -503,6 +503,7 @@ export type Database = {
           removed_at: Timestamp | null;
           last_event_at: Timestamp | null;
           last_event_status: string | null;
+          in_distribution: boolean;
           synced_at: Timestamp;
           created_at: Timestamp;
         };
@@ -535,6 +536,7 @@ export type Database = {
           removed_at?: Timestamp | null;
           last_event_at?: Timestamp | null;
           last_event_status?: string | null;
+          in_distribution?: boolean;
           synced_at?: Timestamp;
           created_at?: Timestamp;
         };
@@ -567,6 +569,7 @@ export type Database = {
           removed_at?: Timestamp | null;
           last_event_at?: Timestamp | null;
           last_event_status?: string | null;
+          in_distribution?: boolean;
           synced_at?: Timestamp;
           created_at?: Timestamp;
         };
