@@ -7,7 +7,7 @@ import {
   listPublishedBuildings,
   type OruloBuildingCard,
 } from "@/lib/orulo/public-queries";
-import { slugify } from "@/lib/slug";
+import { cityMatchesAny, neighborhoodMatchesAny } from "./location";
 
 /**
  * Catálogo público UNIFICADO: imóveis manuais (`properties`) + empreendimentos
@@ -56,11 +56,10 @@ function buildingMatches(
     if (!hay.includes(f.q.toLowerCase())) return false;
   }
   if (f.citySlugs && f.citySlugs.length > 0) {
-    if (!b.city || !f.citySlugs.includes(slugify(b.city))) return false;
+    if (!cityMatchesAny(b.city, f.citySlugs)) return false;
   }
   if (f.neighborhoodSlugs && f.neighborhoodSlugs.length > 0) {
-    if (!b.neighborhood || !f.neighborhoodSlugs.includes(slugify(b.neighborhood)))
-      return false;
+    if (!neighborhoodMatchesAny(b.neighborhood, f.neighborhoodSlugs)) return false;
   }
   if (f.minPrice !== undefined && (b.minPrice === null || b.minPrice < f.minPrice))
     return false;
