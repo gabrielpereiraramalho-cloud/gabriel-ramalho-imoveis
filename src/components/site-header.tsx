@@ -10,7 +10,6 @@ import { trackWhatsAppClick } from "@/lib/analytics/events";
 const NAV_LINKS: { label: string; href: string }[] = [
   { label: "Início", href: "/" },
   { label: "Imóveis", href: "/imoveis" },
-  { label: "Empreendimentos", href: "/empreendimentos" },
   { label: "Comprar", href: "/imoveis?finalidade=sale" },
   { label: "Alugar", href: "/imoveis?finalidade=rent" },
   { label: "Bairros", href: "/#bairros" },

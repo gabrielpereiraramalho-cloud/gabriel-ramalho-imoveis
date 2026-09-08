@@ -1,8 +1,7 @@
-import Image from "next/image";
-
 import type { OruloBuildingDetail } from "@/lib/orulo/public-queries";
 import { siteConfig, whatsappUrl } from "@/lib/site";
 import { PropertyGallery } from "@/components/property-gallery";
+import { FloorPlansGallery } from "@/components/orulo/floor-plans-gallery";
 import { WhatsAppLink } from "@/components/whatsapp-link";
 
 const brl = new Intl.NumberFormat("pt-BR", {
@@ -138,26 +137,7 @@ export function BuildingDetail({ b }: { b: OruloBuildingDetail }) {
               <h2 className="font-serif text-2xl font-semibold text-brand-navy">
                 Plantas
               </h2>
-              <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
-                {b.floorPlans.map((p) => (
-                  <a
-                    key={p.url}
-                    href={p.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="relative aspect-[3/4] overflow-hidden rounded-lg border border-zinc-200 bg-white"
-                  >
-                    <Image
-                      src={p.thumb}
-                      alt={p.alt}
-                      fill
-                      unoptimized
-                      sizes="(max-width: 640px) 50vw, 33vw"
-                      className="object-contain"
-                    />
-                  </a>
-                ))}
-              </div>
+              <FloorPlansGallery plans={b.floorPlans} />
             </section>
           ) : null}
         </div>
