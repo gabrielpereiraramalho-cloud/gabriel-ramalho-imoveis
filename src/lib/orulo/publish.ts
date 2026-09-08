@@ -40,6 +40,10 @@ export async function publishBuildingCore(
   if (!b) return { ok: false, error: "Empreendimento não encontrado." };
   if (!b.slug) return { ok: false, error: "Sem slug — re-sincronize antes." };
 
+  // Idempotência: já publicado → nada a fazer (evita reenviar publication_links
+  // a cada evento e reduz risco de 429). Mantém o estado publicado.
+  if (b.published) return { ok: true, slug: b.slug };
+
   const gate = canAutoPublish(b);
   if (!gate.eligible) {
     return { ok: false, error: `Não publicável: ${gate.reasons.join(", ")}.`, slug: b.slug };

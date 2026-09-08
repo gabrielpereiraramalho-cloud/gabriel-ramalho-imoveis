@@ -3,8 +3,9 @@ import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 import type { Database } from "@/types/database";
-import { OruloError } from "./config";
+import { OruloError, isOruloAutoPublishEnabled } from "./config";
 import { clearPublicationLinks } from "./publication";
+import { publishBuildingCore } from "./publish";
 import { upsertBuildingById } from "./sync";
 import { isForOurIntegration, type OruloWebhookEvent } from "./webhook-parse";
 
@@ -54,10 +55,22 @@ async function handleUpsert(
       `Erro ao atualizar marcações do building ${event.buildingId}.`,
     );
   }
-  return {
-    outcome: "processed",
-    detail: existedBefore ? "atualizado" : "criado",
-  };
+
+  let detail = existedBefore ? "atualizado" : "criado";
+
+  // Publicação automática (somente com ORULO_AUTO_PUBLISH ligada). O gate do
+  // publishBuildingCore garante: elegível + em distribuição + não removido, e é
+  // idempotente (se já publicado, não reenvia links). Falha de publicação NÃO
+  // derruba o processamento do evento (o sync já ocorreu); fica para retry/
+  // reconciliação. Removidos/fora da distribuição nunca são publicados aqui.
+  if (isOruloAutoPublishEnabled()) {
+    const res = await publishBuildingCore(supabase, event.buildingId);
+    detail += res.ok
+      ? " · publicado/mantido"
+      : ` · auto-publish não aplicado (${res.error})`;
+  }
+
+  return { outcome: "processed", detail };
 }
 
 /**
