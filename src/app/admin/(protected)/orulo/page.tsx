@@ -6,6 +6,11 @@ import { isOruloConfigured } from "@/lib/orulo/config";
 import { checkEligibility } from "@/lib/orulo/eligibility";
 import { runOruloSync } from "./actions";
 import { PublishControls } from "./publish-controls";
+import { PublishEligibleButton } from "./publish-eligible-button";
+
+// Permite que o lote de publicação rode além do limite curto padrão (quando o
+// plano da Vercel permitir); cada chamada ainda publica um lote bounded.
+export const maxDuration = 60;
 
 const brl = new Intl.NumberFormat("pt-BR", {
   style: "currency",
@@ -61,6 +66,7 @@ export default async function OruloPage() {
     { count: removedCount },
     { count: inDistributionCount },
     { count: eligibleCount },
+    { count: pendingCount },
   ] = await Promise.all([
     supabase
       .from("orulo_buildings")
@@ -93,13 +99,18 @@ export default async function OruloPage() {
       .not("status", "is", null)
       .gt("min_price", 0)
       .not("cover_image_id", "is", null),
+    // Pendentes de publicação: em distribuição, não removidos, ainda não publicados.
+    countBase()
+      .eq("in_distribution", true)
+      .is("removed_at", null)
+      .eq("published", false),
   ]);
 
   const lastRun = runs?.[0] ?? null;
   const lastWebhook = webhookEvents?.[0] ?? null;
   const total = totalCount ?? 0;
   const removed = removedCount ?? 0;
-  const activeCount = total - removed;
+  const pending = pendingCount ?? 0;
 
   return (
     <main className="flex flex-1 flex-col gap-6 p-8">
@@ -171,12 +182,19 @@ export default async function OruloPage() {
       {/* Contagens reais (count exato no banco, não limitado pela listagem) */}
       <section className="grid gap-3 grid-cols-2 sm:grid-cols-3 lg:grid-cols-6">
         <Stat label="Total no banco" value={String(total)} />
-        <Stat label="Ativos" value={String(activeCount)} hint="Não removidos" />
         <Stat label="Em distribuição" value={String(inDistributionCount ?? 0)} />
-        <Stat label="Elegíveis" value={String(eligibleCount ?? 0)} hint="Conteúdo ok" />
         <Stat label="Publicados" value={String(publishedCount ?? 0)} />
+        <Stat
+          label="Pendentes de publicação"
+          value={String(pending)}
+          hint="Em distribuição, não publicados"
+        />
+        <Stat label="Elegíveis" value={String(eligibleCount ?? 0)} hint="Conteúdo ok" />
         <Stat label="Removidos" value={String(removed)} />
       </section>
+
+      {/* Publicação controlada dos empreendimentos já em distribuição */}
+      <PublishEligibleButton pending={pending} />
 
       {!configured ? (
         <p className="rounded border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-800">

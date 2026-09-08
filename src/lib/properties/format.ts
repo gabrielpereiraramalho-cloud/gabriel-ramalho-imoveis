@@ -33,6 +33,20 @@ export const HIGHLIGHTED_STATUSES: PropertyStatus[] = [
   "rented",
 ];
 
+/**
+ * Rótulo comercial do selo exibido no CARD de imóvel manual (para uniformizar a
+ * grade com os empreendimentos, que sempre têm selo). "available" vira
+ * "Pronto para morar" (comercial, sem inventar informação nem expor origem);
+ * demais estados usam o rótulo direto. "hidden" não aparece no catálogo público.
+ */
+export const CARD_STATUS_LABELS: Record<PropertyStatus, string> = {
+  available: "Pronto para morar",
+  reserved: "Reservado",
+  sold: "Vendido",
+  rented: "Alugado",
+  hidden: "",
+};
+
 const brl = new Intl.NumberFormat("pt-BR", {
   style: "currency",
   currency: "BRL",

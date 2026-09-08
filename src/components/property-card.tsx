@@ -2,7 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 
 import type { PropertyCard as PropertyCardData } from "@/lib/properties/queries";
-import { HIGHLIGHTED_STATUSES, STATUS_LABELS } from "@/lib/properties/format";
+import { CARD_STATUS_LABELS } from "@/lib/properties/format";
 import { PropertyPrice } from "./property-price";
 
 function metaLine(card: PropertyCardData): string {
@@ -10,7 +10,9 @@ function metaLine(card: PropertyCardData): string {
 }
 
 export function PropertyCard({ card }: { card: PropertyCardData }) {
-  const showStatus = HIGHLIGHTED_STATUSES.includes(card.status);
+  // Selo comercial sempre presente (uniformiza a grade com os empreendimentos).
+  const statusLabel =
+    card.status !== "hidden" ? CARD_STATUS_LABELS[card.status] : "";
   const specs: string[] = [];
   if (card.privateArea !== null) specs.push(`${card.privateArea} m²`);
   if (card.bedrooms > 0) specs.push(`${card.bedrooms} quartos`);
@@ -42,9 +44,9 @@ export function PropertyCard({ card }: { card: PropertyCardData }) {
               {card.tag}
             </span>
           ) : null}
-          {showStatus ? (
+          {statusLabel ? (
             <span className="rounded-full bg-brand-navy/90 px-2.5 py-0.5 text-xs font-medium text-white">
-              {STATUS_LABELS[card.status]}
+              {statusLabel}
             </span>
           ) : null}
         </div>
