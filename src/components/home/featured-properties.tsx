@@ -28,8 +28,12 @@ export function FeaturedProperties({
 
   return (
     <div className={`grid grid-cols-1 gap-6 ${cols}`}>
-      {items.map((card) => (
-        <PropertyCard key={card.id} card={card} />
+      {items.map((card, index) => (
+        // No mobile mostramos só 2 destaques (encurta a home); a partir de sm
+        // volta a exibir os 3. Só limita a renderização — a seleção não muda.
+        <div key={card.id} className={index >= 2 ? "hidden sm:block" : undefined}>
+          <PropertyCard card={card} />
+        </div>
       ))}
     </div>
   );

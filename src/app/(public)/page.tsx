@@ -156,13 +156,14 @@ export default async function Home() {
             </Link>
           </div>
 
-          {/* Mobile: carrossel horizontal com peek do próximo card (CSS
-              scroll-snap, swipe nativo, sem autoplay). Desktop: grade normal. */}
-          <div className="-mx-4 flex snap-x snap-mandatory gap-4 overflow-x-auto px-4 pb-2 [scrollbar-width:none] sm:mx-0 sm:grid sm:snap-none sm:grid-cols-2 sm:gap-6 sm:overflow-visible sm:px-0 sm:pb-0 lg:grid-cols-3">
-            {oportunidades.map((item) => (
+          {/* Grade (sem carrossel). No mobile mostramos só 2 cards largos
+              (encurta a home); a partir de sm volta a exibir os 3. Só limita a
+              renderização — a seleção estável do dia não muda. */}
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {oportunidades.map((item, index) => (
               <div
                 key={item.key}
-                className="w-[82%] shrink-0 snap-start sm:w-auto sm:shrink"
+                className={index >= 2 ? "hidden sm:block" : undefined}
               >
                 {item.kind === "building" ? (
                   <BuildingCard card={item.building} />
