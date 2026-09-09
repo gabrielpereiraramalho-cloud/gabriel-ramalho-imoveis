@@ -9,6 +9,10 @@ import type {
 } from "@/types/database";
 import { slugify } from "@/lib/slug";
 import { normalizeLocation } from "@/lib/catalog/location";
+import {
+  normalizePropertyType,
+  normalizePropertyTypes,
+} from "@/lib/catalog/property-type";
 import { toNum } from "./format";
 
 type Supabase = SupabaseClient<Database>;
@@ -37,6 +41,8 @@ export type PropertyCard = {
   neighborhoodName: string | null;
   coverUrl: string | null;
   createdAt: string | null;
+  /** Categoria pública normalizada (Apartamento, Studio, …) ou null. */
+  category: string | null;
 };
 
 export type PropertyImage = { url: string; alt: string };
@@ -114,6 +120,7 @@ type RawCardRow = {
   parking_spaces: number;
   neighborhood_id: string | null;
   created_at: string | null;
+  property_type: string;
   cities: RawCity;
   neighborhoods: RawNeighborhood;
   property_images: RawEmbedImage[];
@@ -122,7 +129,6 @@ type RawCardRow = {
 type RawDetailRow = RawCardRow & {
   code: string;
   description: string | null;
-  property_type: string;
   condominium_fee: number | string | null;
   iptu: number | string | null;
   accepts_financing: boolean;
@@ -145,9 +151,9 @@ type RawDetailRow = RawCardRow & {
 };
 
 const CARD_COLUMNS =
-  "id, slug, title, tag, purpose, status, sale_price, rent_price, private_area, bedrooms, suites, parking_spaces, neighborhood_id, created_at, cities(name, state), neighborhoods(name), property_images(storage_path, alt_text, sort_order, is_cover)";
+  "id, slug, title, tag, purpose, status, sale_price, rent_price, private_area, bedrooms, suites, parking_spaces, neighborhood_id, created_at, property_type, cities(name, state), neighborhoods(name), property_images(storage_path, alt_text, sort_order, is_cover)";
 
-const DETAIL_COLUMNS = `${CARD_COLUMNS}, code, description, property_type, condominium_fee, iptu, accepts_financing, total_area, external_area, bathrooms, floor, solar_position, address, address_number, complement, postal_code, show_exact_address, youtube_url, instagram_url, virtual_tour_url, property_features(features(name, slug, category))`;
+const DETAIL_COLUMNS = `${CARD_COLUMNS}, code, description, condominium_fee, iptu, accepts_financing, total_area, external_area, bathrooms, floor, solar_position, address, address_number, complement, postal_code, show_exact_address, youtube_url, instagram_url, virtual_tour_url, property_features(features(name, slug, category))`;
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -185,6 +191,7 @@ function mapCard(supabase: Supabase, row: RawCardRow): PropertyCard {
     neighborhoodName: row.neighborhoods?.name ?? null,
     coverUrl: coverPath ? publicUrl(supabase, coverPath) : null,
     createdAt: row.created_at,
+    category: normalizePropertyType(row.property_type),
   };
 }
 
@@ -301,7 +308,8 @@ export async function listPublicProperties(
   if (featurePropertyIds) query = query.in("id", featurePropertyIds);
   if (cityIds) query = query.in("city_id", cityIds);
   if (neighborhoodIds) query = query.in("neighborhood_id", neighborhoodIds);
-  if (filters.type) query = query.eq("property_type", filters.type);
+  // Tipo é filtrado por CATEGORIA normalizada na camada do catálogo
+  // (listPublicCatalog), unificando imóveis manuais e tipologias Órulo.
   if (filters.purpose) query = query.eq("purpose", filters.purpose);
   if (filters.minBedrooms) query = query.gte("bedrooms", filters.minBedrooms);
   if (filters.minParking) {
@@ -410,26 +418,39 @@ export async function getPropertyFilterOptions(): Promise<PropertyFilterOptions>
         .not("published_at", "is", null)
         .lte("published_at", nowIso),
       supabase.from("features").select("id, name, slug").eq("active", true).order("name"),
-      // Bairros dos empreendimentos Órulo realmente no catálogo público
-      // (publicados, na distribuição e não removidos). Texto livre.
+      // Empreendimentos Órulo do catálogo público (publicados, na distribuição
+      // e não removidos): bairro (texto livre) + tipologias (para as categorias).
       supabase
         .from("orulo_buildings")
-        .select("neighborhood")
+        .select("neighborhood, typologies")
         .eq("published", true)
         .eq("in_distribution", true)
         .is("removed_at", null),
     ]);
 
   const typeRows = (typesRes.data ?? []) as { property_type: string }[];
-  const types = [...new Set(typeRows.map((r) => r.property_type))].sort((a, b) =>
-    a.localeCompare(b, "pt-BR"),
+  const oruloRows = (oruloNbRes.data ?? []) as {
+    neighborhood: string | null;
+    typologies: unknown;
+  }[];
+  // Categorias reais presentes no catálogo (imóveis manuais + tipologias Órulo).
+  const oruloTypeNames = oruloRows.flatMap((r) =>
+    Array.isArray(r.typologies)
+      ? r.typologies.map((t) =>
+          t && typeof t === "object" && "type" in t
+            ? ((t as { type?: unknown }).type as string | null)
+            : null,
+        )
+      : [],
   );
+  const types = normalizePropertyTypes([
+    ...typeRows.map((r) => r.property_type),
+    ...oruloTypeNames,
+  ]);
 
   const neighborhoods = mergeNeighborhoodOptions(
     (neighborhoodsRes.data ?? []) as NeighborhoodOption[],
-    ((oruloNbRes.data ?? []) as { neighborhood: string | null }[]).map(
-      (r) => r.neighborhood,
-    ),
+    oruloRows.map((r) => r.neighborhood),
   );
 
   return {

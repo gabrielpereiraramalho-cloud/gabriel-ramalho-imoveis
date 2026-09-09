@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { normalizePropertyTypes } from "@/lib/catalog/property-type";
 import { oruloImageUrl, oruloMediaUrl } from "./images";
 
 // ---------------------------------------------------------------------------
@@ -31,6 +32,8 @@ export type OruloBuildingCard = {
   maxArea: number | null;
   coverUrl: string | null;
   publishedAt: string | null;
+  /** Categorias públicas presentes nas tipologias (Apartamento, Studio, …). */
+  types: string[];
 };
 
 export type OruloBuildingDetail = OruloBuildingCard & {
@@ -136,6 +139,7 @@ function mapCard(row: RowShape): OruloBuildingCard {
     maxArea: n(row.max_area),
     coverUrl: cover,
     publishedAt: row.published_at,
+    types: normalizePropertyTypes(asArr(row.typologies).map((t) => s(t.type))),
   };
 }
 

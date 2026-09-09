@@ -48,8 +48,9 @@ function buildingMatches(
 ): boolean {
   // Lançamentos são de venda: aluguel não se aplica.
   if (f.purpose === "rent") return false;
+  // Tipo: casa se alguma tipologia do empreendimento cair na categoria pedida.
+  if (f.type && !b.types.includes(f.type)) return false;
   // Filtros sem dado equivalente no card do empreendimento.
-  if (f.type) return false;
   if (f.minParking !== undefined) return false;
   if (f.featureSlugs && f.featureSlugs.length > 0) return false;
 
@@ -130,6 +131,8 @@ export async function listPublicCatalog(
   const items: CatalogItem[] = [];
 
   for (const p of properties) {
+    // Tipo por categoria normalizada (imóveis manuais).
+    if (filters.type && p.category !== filters.type) continue;
     items.push({
       key: `imovel_${p.id}`,
       kind: "property",
