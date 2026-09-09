@@ -12,14 +12,14 @@ import { MultiSelectFilter } from "@/components/multi-select-filter";
 
 export type PropertyFiltersValues = {
   q: string;
-  finalidade: string;
-  tipo: string;
+  finalidade: string[];
+  tipo: string[];
   cidade: string[];
   bairro: string[];
   min: string;
   max: string;
-  quartos: string;
-  vagas: string;
+  quartos: string[];
+  vagas: string[];
   areaMin: string;
   areaMax: string;
   ordem: string;
@@ -93,40 +93,24 @@ export function PropertyFilters({
             />
           </div>
 
-          <div className="flex flex-col gap-1">
-            <label htmlFor="finalidade" className={labelCls}>
-              Finalidade
-            </label>
-            <select
-              id="finalidade"
-              name="finalidade"
-              defaultValue={values.finalidade}
-              className={inputCls}
-            >
-              <option value="">Todas</option>
-              <option value="sale">Venda</option>
-              <option value="rent">Aluguel</option>
-            </select>
-          </div>
+          <MultiSelectFilter
+            name="finalidade"
+            label="Finalidade"
+            placeholder="Todas"
+            initial={values.finalidade}
+            options={[
+              { value: "sale", label: "Venda" },
+              { value: "rent", label: "Aluguel" },
+            ]}
+          />
 
-          <div className="flex flex-col gap-1">
-            <label htmlFor="tipo" className={labelCls}>
-              Tipo
-            </label>
-            <select
-              id="tipo"
-              name="tipo"
-              defaultValue={values.tipo}
-              className={inputCls}
-            >
-              <option value="">Todos</option>
-              {types.map((t) => (
-                <option key={t} value={t}>
-                  {t}
-                </option>
-              ))}
-            </select>
-          </div>
+          <MultiSelectFilter
+            name="tipo"
+            label="Tipo"
+            placeholder="Todos"
+            initial={values.tipo}
+            options={types.map((t) => ({ value: t, label: t }))}
+          />
 
           <MultiSelectFilter
             name="cidade"
@@ -175,40 +159,31 @@ export function PropertyFilters({
             />
           </div>
 
-          <div className="flex flex-col gap-1">
-            <label htmlFor="quartos" className={labelCls}>
-              Quartos
-            </label>
-            <select
-              id="quartos"
-              name="quartos"
-              defaultValue={values.quartos}
-              className={inputCls}
-            >
-              <option value="">Qualquer</option>
-              <option value="1">1+</option>
-              <option value="2">2+</option>
-              <option value="3">3+</option>
-              <option value="4">4+</option>
-            </select>
-          </div>
+          <MultiSelectFilter
+            name="quartos"
+            label="Quartos"
+            placeholder="Qualquer"
+            initial={values.quartos}
+            options={[
+              { value: "1", label: "1" },
+              { value: "2", label: "2" },
+              { value: "3", label: "3" },
+              { value: "4", label: "4+" },
+            ]}
+          />
 
-          <div className="flex flex-col gap-1">
-            <label htmlFor="vagas" className={labelCls}>
-              Vagas
-            </label>
-            <select
-              id="vagas"
-              name="vagas"
-              defaultValue={values.vagas}
-              className={inputCls}
-            >
-              <option value="">Qualquer</option>
-              <option value="1">1+</option>
-              <option value="2">2+</option>
-              <option value="3">3+</option>
-            </select>
-          </div>
+          <MultiSelectFilter
+            name="vagas"
+            label="Vagas"
+            placeholder="Qualquer"
+            initial={values.vagas}
+            options={[
+              { value: "0", label: "0" },
+              { value: "1", label: "1" },
+              { value: "2", label: "2" },
+              { value: "3", label: "3+" },
+            ]}
+          />
 
           <div className="flex flex-col gap-1">
             <label htmlFor="areaMin" className={labelCls}>

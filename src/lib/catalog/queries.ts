@@ -41,17 +41,54 @@ function ts(iso: string | null): number {
   return Number.isNaN(t) ? 0 : t;
 }
 
+// Buckets de quartos/vagas: valores abaixo do topo são exatos; o topo é ">=".
+const BEDROOM_TOP = 4; // 1,2,3 exatos; 4 = "4+"
+const PARKING_TOP = 3; // 0,1,2 exatos; 3 = "3+"
+
+/** OR de buckets contra um valor único (ex.: quartos do imóvel manual). */
+function valueMatchesBuckets(
+  value: number | null,
+  buckets: number[] | undefined,
+  top: number,
+): boolean {
+  if (!buckets || buckets.length === 0) return true;
+  if (value === null) return false;
+  return buckets.some((k) => (k >= top ? value >= top : value === k));
+}
+
+/** OR de buckets contra um intervalo (ex.: dorm. mín–máx do empreendimento). */
+function rangeMatchesBuckets(
+  min: number | null,
+  max: number | null,
+  buckets: number[] | undefined,
+  top: number,
+): boolean {
+  if (!buckets || buckets.length === 0) return true;
+  const lo = min ?? max;
+  const hi = max ?? min;
+  if (lo === null || hi === null) return false;
+  return buckets.some((k) => (k >= top ? hi >= top : lo <= k && k <= hi));
+}
+
+/** OR entre categorias selecionadas contra as categorias do item. */
+function typesMatch(itemTypes: string[], selected: string[] | undefined): boolean {
+  if (!selected || selected.length === 0) return true;
+  return selected.some((t) => itemTypes.includes(t));
+}
+
 /** Um empreendimento passa pelos filtros que têm equivalente no seu card. */
 function buildingMatches(
   b: OruloBuildingCard,
   f: PropertySearchFilters,
 ): boolean {
-  // Lançamentos são de venda: aluguel não se aplica.
-  if (f.purpose === "rent") return false;
-  // Tipo: casa se alguma tipologia do empreendimento cair na categoria pedida.
-  if (f.type && !b.types.includes(f.type)) return false;
+  // Finalidade: lançamentos são de venda. Se finalidades foram escolhidas e
+  // "sale" não está entre elas (ex.: só Aluguel), exclui empreendimentos.
+  if (f.purposes && f.purposes.length > 0 && !f.purposes.includes("sale"))
+    return false;
+  // Tipo: casa se alguma tipologia do empreendimento cair numa categoria pedida.
+  if (!typesMatch(b.types, f.types)) return false;
   // Filtros sem dado equivalente no card do empreendimento.
-  if (f.minParking !== undefined) return false;
+  if (f.parking && f.parking.length > 0) return false;
   if (f.featureSlugs && f.featureSlugs.length > 0) return false;
 
   if (f.q) {
@@ -71,10 +108,9 @@ function buildingMatches(
     return false;
   if (f.maxPrice !== undefined && (b.minPrice === null || b.minPrice > f.maxPrice))
     return false;
-  if (f.minBedrooms !== undefined) {
-    const maxBeds = b.maxBedrooms ?? b.minBedrooms;
-    if (maxBeds === null || maxBeds < f.minBedrooms) return false;
-  }
+  // Quartos: buckets OR contra o intervalo de dormitórios do empreendimento.
+  if (!rangeMatchesBuckets(b.minBedrooms, b.maxBedrooms, f.bedrooms, BEDROOM_TOP))
+    return false;
   if (f.minArea !== undefined) {
     const maxA = b.maxArea ?? b.minArea;
     if (maxA === null || maxA < f.minArea) return false;
@@ -131,8 +167,12 @@ export async function listPublicCatalog(
   const items: CatalogItem[] = [];
 
   for (const p of properties) {
-    // Tipo por categoria normalizada (imóveis manuais).
-    if (filters.type && p.category !== filters.type) continue;
+    // Tipo/quartos/vagas por categoria e buckets (mesma semântica dos
+    // empreendimentos), unificando as duas fontes.
+    if (!typesMatch(p.category ? [p.category] : [], filters.types)) continue;
+    if (!valueMatchesBuckets(p.bedrooms, filters.bedrooms, BEDROOM_TOP)) continue;
+    if (!valueMatchesBuckets(p.parkingSpaces, filters.parking, PARKING_TOP))
+      continue;
     items.push({
       key: `imovel_${p.id}`,
       kind: "property",

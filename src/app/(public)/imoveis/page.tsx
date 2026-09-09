@@ -66,38 +66,41 @@ export default async function ImoveisPage({
 
   const values: PropertyFiltersValues = {
     q: first(sp.q),
-    finalidade: first(sp.finalidade),
-    tipo: first(sp.tipo),
+    finalidade: toArray(sp.finalidade),
+    tipo: toArray(sp.tipo),
     cidade: toArray(sp.cidade),
     bairro: toArray(sp.bairro),
     min: first(sp.min),
     max: first(sp.max),
-    quartos: first(sp.quartos),
-    vagas: first(sp.vagas),
+    quartos: toArray(sp.quartos),
+    vagas: toArray(sp.vagas),
     areaMin: first(sp.areaMin),
     areaMax: first(sp.areaMax),
     ordem: first(sp.ordem) || "recentes",
     features: toArray(sp.features),
   };
 
-  const purpose =
-    values.finalidade === "sale" || values.finalidade === "rent"
-      ? values.finalidade
-      : undefined;
+  const purposes = values.finalidade.filter(
+    (v): v is "sale" | "rent" => v === "sale" || v === "rent",
+  );
+  const toIntBuckets = (arr: string[]): number[] =>
+    [...new Set(arr.map((v) => Number(v)).filter((n) => Number.isInteger(n)))];
+  const bedrooms = toIntBuckets(values.quartos);
+  const parking = toIntBuckets(values.vagas);
   const sort = SORT_VALUES.includes(values.ordem as PropertySort)
     ? (values.ordem as PropertySort)
     : undefined;
 
   const filters: PropertySearchFilters = {
     q: values.q || undefined,
-    purpose,
-    type: values.tipo || undefined,
+    purposes: purposes.length > 0 ? purposes : undefined,
+    types: values.tipo.length > 0 ? values.tipo : undefined,
     citySlugs: values.cidade.length > 0 ? values.cidade : undefined,
     neighborhoodSlugs: values.bairro.length > 0 ? values.bairro : undefined,
     minPrice: toNumber(values.min),
     maxPrice: toNumber(values.max),
-    minBedrooms: toNumber(values.quartos),
-    minParking: toNumber(values.vagas),
+    bedrooms: bedrooms.length > 0 ? bedrooms : undefined,
+    parking: parking.length > 0 ? parking : undefined,
     minArea: toNumber(values.areaMin),
     maxArea: toNumber(values.areaMax),
     featureSlugs: values.features.length > 0 ? values.features : undefined,

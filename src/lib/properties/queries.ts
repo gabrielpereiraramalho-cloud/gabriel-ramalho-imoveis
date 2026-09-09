@@ -206,16 +206,21 @@ export type PropertySort = "recentes" | "preco-asc" | "preco-desc" | "area-desc"
 
 export type PropertySearchFilters = {
   q?: string;
-  purpose?: PropertyPurpose;
-  type?: string;
+  /** OR entre finalidades (vazio = todas). */
+  purposes?: PropertyPurpose[];
+  /** OR entre categorias normalizadas (Apartamento, Studio, …). */
+  types?: string[];
   citySlugs?: string[];
   neighborhoodSlugs?: string[];
   minPrice?: number;
   maxPrice?: number;
-  minBedrooms?: number;
-  minParking?: number;
+  /** Buckets de quartos (OR): 1,2,3 = exatos; 4 = "4+". */
+  bedrooms?: number[];
+  /** Buckets de vagas (OR): 0,1,2 = exatos; 3 = "3+". */
+  parking?: number[];
   minArea?: number;
   maxArea?: number;
+  /** Características: AND (o imóvel deve ter TODAS as marcadas). */
   featureSlugs?: string[];
   sort?: PropertySort;
 };
@@ -308,13 +313,12 @@ export async function listPublicProperties(
   if (featurePropertyIds) query = query.in("id", featurePropertyIds);
   if (cityIds) query = query.in("city_id", cityIds);
   if (neighborhoodIds) query = query.in("neighborhood_id", neighborhoodIds);
-  // Tipo é filtrado por CATEGORIA normalizada na camada do catálogo
-  // (listPublicCatalog), unificando imóveis manuais e tipologias Órulo.
-  if (filters.purpose) query = query.eq("purpose", filters.purpose);
-  if (filters.minBedrooms) query = query.gte("bedrooms", filters.minBedrooms);
-  if (filters.minParking) {
-    query = query.gte("parking_spaces", filters.minParking);
+  // Finalidade: OR entre as escolhidas (vazio = todas).
+  if (filters.purposes && filters.purposes.length > 0) {
+    query = query.in("purpose", filters.purposes);
   }
+  // Tipo (categoria), quartos e vagas são aplicados por BUCKET/OR na camada do
+  // catálogo (listPublicCatalog), unificando imóveis manuais e Órulo.
   if (filters.minArea !== undefined) {
     query = query.gte("private_area", filters.minArea);
   }
@@ -326,9 +330,13 @@ export async function listPublicProperties(
     if (term) query = query.or(`title.ilike.%${term}%,code.ilike.%${term}%`);
   }
 
-  // Preço: com finalidade, filtra a coluna correspondente. Sem finalidade,
-  // aplica no preço principal de cada imóvel (OR por finalidade).
-  const { minPrice, maxPrice, purpose } = filters;
+  // Preço: coluna conforme a finalidade quando exatamente UMA está selecionada;
+  // com 0 ou 2 finalidades, aplica OR no preço de venda/aluguel.
+  const { minPrice, maxPrice } = filters;
+  const purpose =
+    filters.purposes && filters.purposes.length === 1
+      ? filters.purposes[0]
+      : undefined;
   if (minPrice !== undefined || maxPrice !== undefined) {
     if (purpose === "rent") {
       if (minPrice !== undefined) query = query.gte("rent_price", minPrice);
