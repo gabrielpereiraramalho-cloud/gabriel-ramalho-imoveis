@@ -29,13 +29,15 @@ export function MultiSelectFilter({
 
   useEffect(() => {
     if (!open) return;
-    const onClick = (e: MouseEvent) => {
+    // pointerdown cobre mouse e toque de forma consistente (mobile-friendly);
+    // fecha só quando o toque/clique é FORA do componente (seleção preservada).
+    const onDown = (e: Event) => {
       if (ref.current && !ref.current.contains(e.target as Node)) {
         setOpen(false);
       }
     };
-    document.addEventListener("mousedown", onClick);
-    return () => document.removeEventListener("mousedown", onClick);
+    document.addEventListener("pointerdown", onDown);
+    return () => document.removeEventListener("pointerdown", onDown);
   }, [open]);
 
   const toggle = (value: string) => {
@@ -53,7 +55,7 @@ export function MultiSelectFilter({
       ? placeholder
       : chosen.length === 1
         ? chosen[0].label
-        : `${chosen[0].label} +${chosen.length - 1}`;
+        : `${chosen.length} selecionados`;
 
   return (
     <div className="flex flex-col gap-1" ref={ref}>
@@ -92,7 +94,7 @@ export function MultiSelectFilter({
           {options.map((o) => (
             <label
               key={o.value}
-              className="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-sm hover:bg-zinc-50"
+              className="flex cursor-pointer items-center gap-2.5 rounded px-2 py-2 text-sm hover:bg-zinc-50"
             >
               <input
                 type="checkbox"
@@ -100,6 +102,7 @@ export function MultiSelectFilter({
                 value={o.value}
                 checked={selected.has(o.value)}
                 onChange={() => toggle(o.value)}
+                className="h-4 w-4 shrink-0 accent-brand-navy"
               />
               {o.label}
             </label>
