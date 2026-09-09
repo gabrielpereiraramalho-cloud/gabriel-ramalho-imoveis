@@ -34,6 +34,9 @@ export function absoluteUrl(path: string): string {
 /** Imagem Open Graph padrão do site (caminho absoluto). */
 export const defaultOgImage = absoluteUrl("/og-default.png");
 
+/** Imagem Open Graph premium da HOME (1200x630), URL absoluta. */
+export const homeOgImage = absoluteUrl("/og-home.png");
+
 /**
  * Serializa dados para JSON-LD de forma segura (escapa `<` para evitar
  * fechamento indevido de `</script>`). Os dados são construídos no servidor.

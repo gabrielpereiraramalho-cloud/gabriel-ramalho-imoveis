@@ -13,6 +13,7 @@ import {
 import {
   absoluteUrl,
   defaultOgImage,
+  homeOgImage,
   jsonLdScript,
   siteConfig,
   siteUrl,
@@ -36,7 +37,20 @@ export const metadata: Metadata = {
     title: "Imóveis em João Pessoa | Gabriel Ramalho",
     description: HOME_DESCRIPTION,
     url: siteUrl,
-    images: [{ url: defaultOgImage }],
+    images: [
+      {
+        url: homeOgImage,
+        width: 1200,
+        height: 630,
+        alt: "Gabriel Ramalho Imóveis — Imóveis em João Pessoa e região",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Imóveis em João Pessoa | Gabriel Ramalho",
+    description: HOME_DESCRIPTION,
+    images: [homeOgImage],
   },
 };
 
