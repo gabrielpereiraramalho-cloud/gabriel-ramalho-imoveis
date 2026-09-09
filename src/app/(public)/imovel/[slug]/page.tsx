@@ -7,10 +7,9 @@ import {
   type PropertyDetail,
 } from "@/lib/properties/queries";
 import {
-  HIGHLIGHTED_STATUSES,
+  CARD_STATUS_LABELS,
   mainPriceLabel,
   SOLAR_LABELS,
-  STATUS_LABELS,
 } from "@/lib/properties/format";
 import {
   absoluteUrl,
@@ -187,7 +186,9 @@ export default async function ImovelPage({ params }: Params) {
   const meta = [property.neighborhoodName, property.cityName]
     .filter(Boolean)
     .join(", ");
-  const showStatus = HIGHLIGHTED_STATUSES.includes(property.status);
+  // Selo comercial sempre presente (mesmo padrão do card e do empreendimento).
+  const statusLabel =
+    property.status !== "hidden" ? CARD_STATUS_LABELS[property.status] : "";
   const descriptionParagraphs = (property.description ?? "")
     .split(/\n+/)
     .map((p) => p.trim())
@@ -226,9 +227,9 @@ export default async function ImovelPage({ params }: Params) {
               {property.tag}
             </span>
           ) : null}
-          {showStatus ? (
+          {statusLabel ? (
             <span className="rounded-full bg-brand-navy/90 px-2.5 py-0.5 text-xs font-medium text-white">
-              {STATUS_LABELS[property.status]}
+              {statusLabel}
             </span>
           ) : null}
         </div>
@@ -244,7 +245,7 @@ export default async function ImovelPage({ params }: Params) {
         />
       </header>
 
-      <div className="grid gap-8 lg:grid-cols-[minmax(0,2fr)_minmax(280px,0.85fr)] lg:items-start">
+      <div className="grid gap-8 lg:grid-cols-[2fr_1fr] lg:items-start">
         <div className="flex min-w-0 flex-col gap-8">
           <PropertyGallery images={property.images} />
 
@@ -315,7 +316,13 @@ export default async function ImovelPage({ params }: Params) {
               rentPrice={property.rentPrice}
               className="text-xl font-semibold text-brand-navy"
             />
-            <p className="text-sm text-zinc-500">Código: {property.code}</p>
+            {/* Linha secundária no mesmo padrão do empreendimento
+                ("Empreendimento — cidade"). O código interno (ex.: GR-03) NÃO é
+                exibido ao público — segue no admin/banco e na mensagem interna. */}
+            <p className="text-sm text-zinc-500">
+              {property.propertyType}
+              {property.cityName ? ` — ${property.cityName}` : ""}
+            </p>
             <PropertyWhatsappCta property={trackedProperty} />
           </div>
         </aside>

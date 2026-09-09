@@ -5,7 +5,9 @@ import type { PropertyFeature } from "@/lib/properties/queries";
 const CATEGORY_LABELS: Record<string, string> = {
   property: "Imóvel",
   condominium: "Condomínio",
-  location: "Localização",
+  // "Proximidades" (e não "Localização") para não duplicar o rótulo da seção
+  // dedicada "Localização".
+  location: "Proximidades",
 };
 
 function categoryLabel(category: string | null): string {

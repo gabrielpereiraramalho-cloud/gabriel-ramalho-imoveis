@@ -28,7 +28,7 @@ export function PropertyWhatsappCta({
       onClick={() => trackPropertyInterest(property)}
       className="inline-flex items-center justify-center rounded-lg bg-brand-navy px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-brand-navy-dark"
     >
-      Tenho interesse neste imóvel
+      Tenho interesse
     </a>
   );
 }
