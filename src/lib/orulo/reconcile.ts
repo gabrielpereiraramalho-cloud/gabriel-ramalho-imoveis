@@ -29,9 +29,12 @@ type Db = SupabaseClient<Database>;
 
 const BASE_DELAY_MS = 300; // espaçamento entre chamadas à Órulo
 const MAX_429_RETRIES = 3; // 2s, 4s, 8s
-const MAX_UPSERTS = 30; // teto de novos/reativados por execução
-const MAX_REMOVALS = 30; // teto de saídas/removidos por execução
-const RUNNING_WINDOW_MS = 20 * 60 * 1000; // lock: run "presa" por até 20min
+// Tetos calibrados para o plano Vercel Hobby (~10s por invocação): cada upsert
+// faz ~3 GETs à Órulo, então mantemos poucos por execução. Excedentes rolam
+// para o run seguinte (idempotente). O webhook é o canal principal em tempo real.
+const MAX_UPSERTS = 4; // teto de novos/reativados por execução
+const MAX_REMOVALS = 8; // teto de saídas/removidos por execução
+const RUNNING_WINDOW_MS = 10 * 60 * 1000; // lock: run "presa" liberada após 10min
 const DAILY_DEDUPE_MS = 20 * 60 * 60 * 1000; // não repete se sucesso < 20h
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));

@@ -1,9 +1,12 @@
 import { reconcileOrulo } from "@/lib/orulo/reconcile";
 
 // Precisa de Node (libs server-only) e nunca deve ser cacheada.
+// maxDuration = 10 é o teto do plano Vercel Hobby. Os tetos de reconciliação
+// (MAX_UPSERTS/MAX_REMOVALS) são calibrados para caber com folga; se um dia de
+// backlog exceder, o run é cortado sem prejuízo (idempotente e retomável).
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
-export const maxDuration = 60;
+export const maxDuration = 10;
 
 function log(fields: Record<string, string | number | boolean | null | undefined>) {
   const parts = Object.entries({ at: new Date().toISOString(), ...fields }).map(
