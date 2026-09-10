@@ -83,6 +83,25 @@ export function trackPropertyInterest(p: TrackedProperty): void {
   });
 }
 
+/**
+ * Compartilhamento de um imóvel/empreendimento por WhatsApp: GA `share_whatsapp`.
+ * É intencionalmente distinto de `property_interest`/`whatsapp_click` (o clique
+ * em "Tenho interesse") — aqui o usuário envia o anúncio a outra pessoa, não
+ * abre conversa com a imobiliária. Sem evento de Meta (não é um lead/contato).
+ */
+export function trackWhatsAppShare(p: {
+  contentType: "property" | "building";
+  id: string;
+  title: string;
+}): void {
+  trackGAEvent("share_whatsapp", {
+    method: "whatsapp",
+    content_type: p.contentType,
+    content_id: p.id,
+    content_title: p.title,
+  });
+}
+
 /** CTA geral de WhatsApp: GA `whatsapp_click` + Meta `Contact`. */
 export function trackWhatsAppClick(source: WhatsAppSource): void {
   trackGAEvent("whatsapp_click", { source });

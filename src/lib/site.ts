@@ -50,3 +50,32 @@ export function whatsappUrl(message: string): string | null {
   if (!siteConfig.whatsappNumber) return null;
   return `https://wa.me/${siteConfig.whatsappNumber}?text=${encodeURIComponent(message)}`;
 }
+
+/**
+ * URL de COMPARTILHAMENTO do WhatsApp (sem número): abre o WhatsApp com a
+ * mensagem pronta para o usuário escolher com qual contato compartilhar. Não
+ * depende do número da imobiliária — serve para enviar o imóvel a um cliente.
+ */
+export function whatsappShareUrl(message: string): string {
+  return `https://wa.me/?text=${encodeURIComponent(message)}`;
+}
+
+/**
+ * Monta a mensagem de compartilhamento de um imóvel/empreendimento:
+ * intro, "título — localização", preço e URL pública, uma por linha. Campos
+ * vazios (localização/preço) são omitidos.
+ */
+export function buildShareMessage(parts: {
+  intro: string;
+  title: string;
+  location?: string | null;
+  price?: string | null;
+  url: string;
+}): string {
+  const heading = parts.location
+    ? `${parts.title} — ${parts.location}`
+    : parts.title;
+  return [parts.intro, heading, parts.price, parts.url]
+    .filter(Boolean)
+    .join("\n");
+}

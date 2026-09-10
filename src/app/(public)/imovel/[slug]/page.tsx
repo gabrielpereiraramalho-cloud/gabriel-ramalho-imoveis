@@ -13,6 +13,7 @@ import {
 } from "@/lib/properties/format";
 import {
   absoluteUrl,
+  buildShareMessage,
   defaultOgImage,
   jsonLdScript,
   siteConfig,
@@ -23,6 +24,7 @@ import { PropertyGallery } from "@/components/property-gallery";
 import { PropertyLocation } from "@/components/property-location";
 import { PropertyPrice } from "@/components/property-price";
 import { PropertyWhatsappCta } from "@/components/property-whatsapp-cta";
+import { WhatsAppShareButton } from "@/components/whatsapp-share-button";
 import { PropertyMobileCta } from "@/components/property-mobile-cta";
 import { PropertyViewTracker } from "@/components/property-view-tracker";
 import type { TrackedProperty } from "@/lib/analytics/events";
@@ -212,6 +214,14 @@ export default async function ImovelPage({ params }: Params) {
     price: property.purpose === "sale" ? property.salePrice : property.rentPrice,
   };
 
+  const shareMessage = buildShareMessage({
+    intro: "Olha esse imóvel que achei interessante:",
+    title: property.title,
+    location: meta || null,
+    price: mainPriceLabel(property.purpose, property.salePrice, property.rentPrice),
+    url: absoluteUrl(`/imovel/${property.slug}`),
+  });
+
   return (
     <main className="mx-auto flex w-full max-w-[1440px] flex-1 flex-col gap-10 px-4 py-10">
       <script
@@ -324,6 +334,15 @@ export default async function ImovelPage({ params }: Params) {
               {property.cityName ? ` — ${property.cityName}` : ""}
             </p>
             <PropertyWhatsappCta property={trackedProperty} />
+            <WhatsAppShareButton
+              message={shareMessage}
+              target={{
+                contentType: "property",
+                id: property.id,
+                title: property.title,
+              }}
+              className="inline-flex items-center justify-center gap-2 rounded-lg border border-brand-navy/20 bg-white px-5 py-3 text-sm font-semibold text-brand-navy transition-colors hover:bg-brand-navy/5"
+            />
           </div>
         </aside>
       </div>

@@ -2,6 +2,8 @@ import Image from "next/image";
 import Link from "next/link";
 
 import type { OruloBuildingCard } from "@/lib/orulo/public-queries";
+import { absoluteUrl, buildShareMessage } from "@/lib/site";
+import { WhatsAppShareButton } from "@/components/whatsapp-share-button";
 
 const brl = new Intl.NumberFormat("pt-BR", {
   style: "currency",
@@ -24,6 +26,14 @@ export function BuildingCard({ card }: { card: OruloBuildingCard }) {
   const meta = [card.neighborhood, card.city].filter(Boolean).join(", ");
   const beds = range(card.minBedrooms, card.maxBedrooms, " dorm.");
   const area = range(card.minArea, card.maxArea, " m²");
+
+  const shareMessage = buildShareMessage({
+    intro: "Olha esse empreendimento que achei interessante:",
+    title: card.name,
+    location: meta || null,
+    price: card.minPrice === null ? null : `A partir de ${brl.format(card.minPrice)}`,
+    url: absoluteUrl(`/empreendimento/${card.slug}`),
+  });
 
   return (
     <Link
@@ -55,6 +65,12 @@ export function BuildingCard({ card }: { card: OruloBuildingCard }) {
             </span>
           ) : null}
         </div>
+        <WhatsAppShareButton
+          message={shareMessage}
+          target={{ contentType: "building", id: card.slug, title: card.name }}
+          asIcon
+          className="absolute right-2 top-2 inline-flex h-8 w-8 items-center justify-center rounded-full bg-white/90 text-brand-navy shadow-sm backdrop-blur transition-colors hover:bg-white hover:text-brand-navy-dark sm:right-3 sm:top-3"
+        />
       </div>
 
       <div className="flex flex-1 flex-col gap-1.5 p-3 sm:gap-2 sm:p-5">

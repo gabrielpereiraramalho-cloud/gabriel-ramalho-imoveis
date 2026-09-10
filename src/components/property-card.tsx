@@ -2,8 +2,10 @@ import Image from "next/image";
 import Link from "next/link";
 
 import type { PropertyCard as PropertyCardData } from "@/lib/properties/queries";
-import { CARD_STATUS_LABELS } from "@/lib/properties/format";
+import { CARD_STATUS_LABELS, mainPriceLabel } from "@/lib/properties/format";
+import { absoluteUrl, buildShareMessage } from "@/lib/site";
 import { PropertyPrice } from "./property-price";
+import { WhatsAppShareButton } from "./whatsapp-share-button";
 
 function metaLine(card: PropertyCardData): string {
   return [card.neighborhoodName, card.cityName].filter(Boolean).join(", ");
@@ -18,6 +20,14 @@ export function PropertyCard({ card }: { card: PropertyCardData }) {
   if (card.bedrooms > 0) specs.push(`${card.bedrooms} quartos`);
   if (card.suites > 0) specs.push(`${card.suites} suítes`);
   if (card.parkingSpaces > 0) specs.push(`${card.parkingSpaces} vagas`);
+
+  const shareMessage = buildShareMessage({
+    intro: "Olha esse imóvel que achei interessante:",
+    title: card.title,
+    location: metaLine(card) || null,
+    price: mainPriceLabel(card.purpose, card.salePrice, card.rentPrice),
+    url: absoluteUrl(`/imovel/${card.slug}`),
+  });
 
   return (
     <Link
@@ -50,6 +60,12 @@ export function PropertyCard({ card }: { card: PropertyCardData }) {
             </span>
           ) : null}
         </div>
+        <WhatsAppShareButton
+          message={shareMessage}
+          target={{ contentType: "property", id: card.id, title: card.title }}
+          asIcon
+          className="absolute right-2 top-2 inline-flex h-8 w-8 items-center justify-center rounded-full bg-white/90 text-brand-navy shadow-sm backdrop-blur transition-colors hover:bg-white hover:text-brand-navy-dark sm:right-3 sm:top-3"
+        />
       </div>
 
       <div className="flex flex-1 flex-col gap-1.5 p-3 sm:gap-2 sm:p-5">

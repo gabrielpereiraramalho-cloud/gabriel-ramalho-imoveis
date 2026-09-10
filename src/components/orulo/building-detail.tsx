@@ -1,8 +1,14 @@
 import type { OruloBuildingDetail } from "@/lib/orulo/public-queries";
-import { siteConfig, whatsappUrl } from "@/lib/site";
+import {
+  absoluteUrl,
+  buildShareMessage,
+  siteConfig,
+  whatsappUrl,
+} from "@/lib/site";
 import { PropertyGallery } from "@/components/property-gallery";
 import { FloorPlansGallery } from "@/components/orulo/floor-plans-gallery";
 import { WhatsAppLink } from "@/components/whatsapp-link";
+import { WhatsAppShareButton } from "@/components/whatsapp-share-button";
 
 const brl = new Intl.NumberFormat("pt-BR", {
   style: "currency",
@@ -31,6 +37,13 @@ export function BuildingDetail({ b }: { b: OruloBuildingDetail }) {
     .split(/\n+/)
     .map((p) => p.trim())
     .filter(Boolean);
+  const shareMessage = buildShareMessage({
+    intro: "Olha esse empreendimento que achei interessante:",
+    title: b.name,
+    location: meta || null,
+    price: b.minPrice === null ? null : `A partir de ${money(b.minPrice)}`,
+    url: absoluteUrl(`/empreendimento/${b.slug}`),
+  });
 
   return (
     <div className="flex flex-col gap-10">
@@ -158,6 +171,11 @@ export function BuildingDetail({ b }: { b: OruloBuildingDetail }) {
                 Tenho interesse
               </WhatsAppLink>
             ) : null}
+            <WhatsAppShareButton
+              message={shareMessage}
+              target={{ contentType: "building", id: b.slug, title: b.name }}
+              className="inline-flex items-center justify-center gap-2 rounded-lg border border-brand-navy/20 bg-white px-5 py-3 text-sm font-semibold text-brand-navy transition-colors hover:bg-brand-navy/5"
+            />
           </div>
         </aside>
       </div>
