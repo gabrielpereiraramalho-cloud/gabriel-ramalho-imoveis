@@ -4,9 +4,9 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { isOruloConfigured, isOruloAutoPublishEnabled } from "@/lib/orulo/config";
 import { checkEligibility } from "@/lib/orulo/eligibility";
-import { runOruloSync } from "./actions";
 import { PublishControls } from "./publish-controls";
 import { PublishEligibleButton } from "./publish-eligible-button";
+import { SyncControls } from "./sync-controls";
 
 // Permite que o lote de publicação rode além do limite curto padrão (quando o
 // plano da Vercel permitir); cada chamada ainda publica um lote bounded.
@@ -57,23 +57,49 @@ export default async function OruloPage() {
       head: true,
     });
 
+  // Conteúdo elegível (aproxima checkEligibility em SQL): campos essenciais
+  // presentes, preço > 0 e ao menos uma imagem. Reutilizado em duas contagens.
+  const contentEligible = () =>
+    countBase()
+      .not("name", "is", null)
+      .not("city", "is", null)
+      .not("neighborhood", "is", null)
+      .not("status", "is", null)
+      .gt("min_price", 0)
+      .not("cover_image_id", "is", null);
+
+  const listCols =
+    "external_id, slug, name, city, neighborhood, min_price, status, cover_image_id, images, published, removed_at, in_distribution, last_event_status, last_event_at, synced_at";
+
   const [
-    { data: buildings, error: buildingsError },
+    { data: currentRows, error: buildingsError },
+    { data: historicRows },
     { data: runs },
     { data: webhookEvents },
     { count: totalCount },
     { count: publishedCount },
     { count: removedCount },
     { count: inDistributionCount },
-    { count: eligibleCount },
+    { count: outOfDistributionCount },
+    { count: contentEligibleCount },
+    { count: eligibleNowCount },
     { count: pendingCount },
   ] = await Promise.all([
+    // Tabela principal: SOMENTE a distribuição atual (in_distribution=true e
+    // não removidos). SP/RJ e fora-da-praça NÃO aparecem aqui.
     supabase
       .from("orulo_buildings")
-      .select(
-        "external_id, slug, name, city, neighborhood, min_price, status, cover_image_id, images, published, removed_at, in_distribution, synced_at",
-      )
+      .select(listCols)
+      .eq("in_distribution", true)
+      .is("removed_at", null)
       .order("synced_at", { ascending: false })
+      .limit(1000),
+    // Histórico / Fora da distribuição: fora da distribuição OU removidos.
+    supabase
+      .from("orulo_buildings")
+      .select(listCols)
+      .or("in_distribution.eq.false,removed_at.not.is.null")
+      .order("last_event_at", { ascending: false, nullsFirst: false })
       .limit(1000),
     supabase
       .from("orulo_sync_runs")
@@ -90,15 +116,15 @@ export default async function OruloPage() {
     countBase().eq("published", true),
     countBase().not("removed_at", "is", null),
     countBase().eq("in_distribution", true),
-    // Elegíveis por conteúdo (aproxima checkEligibility em SQL): campos
-    // essenciais presentes, preço > 0 e ao menos uma imagem.
-    countBase()
-      .not("name", "is", null)
-      .not("city", "is", null)
-      .not("neighborhood", "is", null)
-      .not("status", "is", null)
-      .gt("min_price", 0)
-      .not("cover_image_id", "is", null),
+    // Fora da distribuição (mas NÃO removidos): in_distribution=false e removed_at nulo.
+    countBase().eq("in_distribution", false).is("removed_at", null),
+    contentEligible(),
+    // Elegíveis PARA PUBLICAÇÃO AGORA (gate completo): conteúdo ok + em
+    // distribuição + não removido + ainda não publicado.
+    contentEligible()
+      .eq("in_distribution", true)
+      .is("removed_at", null)
+      .eq("published", false),
     // Pendentes de publicação: em distribuição, não removidos, ainda não publicados.
     countBase()
       .eq("in_distribution", true)
@@ -187,8 +213,12 @@ export default async function OruloPage() {
       </section>
 
       {/* Contagens reais (count exato no banco, não limitado pela listagem) */}
-      <section className="grid gap-3 grid-cols-2 sm:grid-cols-3 lg:grid-cols-6">
-        <Stat label="Total no banco" value={String(total)} />
+      <section className="grid gap-3 grid-cols-2 sm:grid-cols-3 lg:grid-cols-7">
+        <Stat
+          label="Total histórico no banco"
+          value={String(total)}
+          hint="Nunca apagado"
+        />
         <Stat label="Em distribuição" value={String(inDistributionCount ?? 0)} />
         <Stat label="Publicados" value={String(publishedCount ?? 0)} />
         <Stat
@@ -196,7 +226,16 @@ export default async function OruloPage() {
           value={String(pending)}
           hint="Em distribuição, não publicados"
         />
-        <Stat label="Elegíveis" value={String(eligibleCount ?? 0)} hint="Conteúdo ok" />
+        <Stat
+          label="Elegíveis para publicação"
+          value={String(eligibleNowCount ?? 0)}
+          hint={`Gate completo · conteúdo ok: ${contentEligibleCount ?? 0}`}
+        />
+        <Stat
+          label="Fora da distribuição"
+          value={String(outOfDistributionCount ?? 0)}
+          hint="Não removidos"
+        />
         <Stat label="Removidos" value={String(removed)} />
       </section>
 
@@ -225,14 +264,7 @@ export default async function OruloPage() {
         </section>
       ) : null}
 
-      <form action={runOruloSync}>
-        <button
-          type="submit"
-          className="inline-flex items-center gap-2 rounded-md bg-zinc-900 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-zinc-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-zinc-900"
-        >
-          Sincronizar agora
-        </button>
-      </form>
+      <SyncControls />
 
       {buildingsError ? (
         <p className="text-sm text-red-600">
@@ -241,75 +273,152 @@ export default async function OruloPage() {
         </p>
       ) : null}
 
-      <div className="overflow-x-auto rounded border border-zinc-200">
-        <table className="w-full text-sm">
-          <thead className="bg-zinc-50">
-            <tr>
-              <th className={thCls}>ID Órulo</th>
-              <th className={thCls}>Nome</th>
-              <th className={thCls}>Cidade</th>
-              <th className={thCls}>Bairro</th>
-              <th className={thCls}>Preço inicial</th>
-              <th className={thCls}>Publicado</th>
-              <th className={thCls}>Elegível</th>
-              <th className={thCls}>Ações</th>
-            </tr>
-          </thead>
-          <tbody>
-            {(buildings ?? []).length === 0 ? (
+      {/* Tabela principal: SOMENTE a distribuição atual (in_distribution=true,
+          não removidos). SP/RJ e histórico ficam na seção abaixo. */}
+      <section className="flex flex-col gap-2">
+        <h2 className="text-sm font-semibold text-zinc-900">
+          Distribuição atual ({(currentRows ?? []).length})
+        </h2>
+        <div className="overflow-x-auto rounded border border-zinc-200">
+          <table className="w-full text-sm">
+            <thead className="bg-zinc-50">
               <tr>
-                <td className="px-3 py-6 text-center text-zinc-500" colSpan={8}>
-                  Nenhum empreendimento sincronizado ainda.
-                </td>
+                <th className={thCls}>ID Órulo</th>
+                <th className={thCls}>Nome</th>
+                <th className={thCls}>Cidade</th>
+                <th className={thCls}>Bairro</th>
+                <th className={thCls}>Preço inicial</th>
+                <th className={thCls}>Publicado</th>
+                <th className={thCls}>Elegível</th>
+                <th className={thCls}>Ações</th>
               </tr>
-            ) : (
-              (buildings ?? []).map((b) => {
-                const elig = checkEligibility(b);
-                return (
-                  <tr key={b.external_id} className="border-t border-zinc-200">
-                    <td className={tdCls}>{b.external_id}</td>
-                    <td className={`${tdCls} max-w-xs truncate`}>
-                      {b.name ?? "—"}
-                    </td>
-                    <td className={tdCls}>{b.city ?? "—"}</td>
-                    <td className={tdCls}>{b.neighborhood ?? "—"}</td>
-                    <td className={tdCls}>{money(b.min_price)}</td>
-                    <td className={tdCls}>{b.published ? "Sim" : "Não"}</td>
-                    <td className={tdCls}>
-                      {elig.eligible ? (
-                        "Sim"
-                      ) : (
-                        <span
-                          className="text-amber-700"
-                          title={elig.reasons.join(", ")}
-                        >
-                          Não
-                        </span>
-                      )}
-                    </td>
-                    <td className={tdCls}>
-                      <div className="flex items-center gap-2">
+            </thead>
+            <tbody>
+              {(currentRows ?? []).length === 0 ? (
+                <tr>
+                  <td className="px-3 py-6 text-center text-zinc-500" colSpan={8}>
+                    Nenhum empreendimento na distribuição atual.
+                  </td>
+                </tr>
+              ) : (
+                (currentRows ?? []).map((b) => {
+                  const elig = checkEligibility(b);
+                  return (
+                    <tr key={b.external_id} className="border-t border-zinc-200">
+                      <td className={tdCls}>{b.external_id}</td>
+                      <td className={`${tdCls} max-w-xs truncate`}>
+                        {b.name ?? "—"}
+                      </td>
+                      <td className={tdCls}>{b.city ?? "—"}</td>
+                      <td className={tdCls}>{b.neighborhood ?? "—"}</td>
+                      <td className={tdCls}>{money(b.min_price)}</td>
+                      <td className={tdCls}>{b.published ? "Sim" : "Não"}</td>
+                      <td className={tdCls}>
+                        {elig.eligible ? (
+                          "Sim"
+                        ) : (
+                          <span
+                            className="text-amber-700"
+                            title={elig.reasons.join(", ")}
+                          >
+                            Não
+                          </span>
+                        )}
+                      </td>
+                      <td className={tdCls}>
+                        <div className="flex items-center gap-2">
+                          <Link
+                            href={`/admin/orulo/preview/${b.external_id}`}
+                            className="rounded border border-zinc-300 px-2 py-1 text-xs"
+                          >
+                            Prévia
+                          </Link>
+                          <PublishControls
+                            externalId={b.external_id}
+                            published={b.published}
+                            eligible={elig.eligible}
+                            reasons={elig.reasons}
+                          />
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })
+              )}
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      {/* Histórico / Fora da distribuição: fora da praça OU removidos. Sem botão
+          Publicar (não podem ser publicados). Nada é apagado do banco. */}
+      <section className="flex flex-col gap-2">
+        <h2 className="text-sm font-semibold text-zinc-900">
+          Histórico / Fora da distribuição ({(historicRows ?? []).length})
+        </h2>
+        <p className="text-xs text-zinc-500">
+          Registros fora de <code>/ids/active</code> (ex.: excluídos da praça) ou
+          removidos. Mantidos apenas como histórico — não são publicáveis.
+        </p>
+        <div className="overflow-x-auto rounded border border-zinc-200">
+          <table className="w-full text-sm">
+            <thead className="bg-zinc-50">
+              <tr>
+                <th className={thCls}>ID Órulo</th>
+                <th className={thCls}>Nome</th>
+                <th className={thCls}>Cidade</th>
+                <th className={thCls}>Bairro</th>
+                <th className={thCls}>Situação</th>
+                <th className={thCls}>Último evento</th>
+                <th className={thCls}>Data</th>
+                <th className={thCls}>Ações</th>
+              </tr>
+            </thead>
+            <tbody>
+              {(historicRows ?? []).length === 0 ? (
+                <tr>
+                  <td className="px-3 py-6 text-center text-zinc-500" colSpan={8}>
+                    Nenhum registro fora da distribuição.
+                  </td>
+                </tr>
+              ) : (
+                (historicRows ?? []).map((b) => {
+                  const isRemoved = b.removed_at !== null;
+                  return (
+                    <tr key={b.external_id} className="border-t border-zinc-200">
+                      <td className={tdCls}>{b.external_id}</td>
+                      <td className={`${tdCls} max-w-xs truncate`}>
+                        {b.name ?? "—"}
+                      </td>
+                      <td className={tdCls}>{b.city ?? "—"}</td>
+                      <td className={tdCls}>{b.neighborhood ?? "—"}</td>
+                      <td className={tdCls}>
+                        {isRemoved ? (
+                          <Badge tone="error">Removido</Badge>
+                        ) : (
+                          <Badge tone="neutral">Fora da distribuição</Badge>
+                        )}
+                      </td>
+                      <td className={tdCls}>{b.last_event_status ?? "—"}</td>
+                      <td className={tdCls}>
+                        {dateTime(b.removed_at ?? b.last_event_at)}
+                      </td>
+                      <td className={tdCls}>
                         <Link
                           href={`/admin/orulo/preview/${b.external_id}`}
                           className="rounded border border-zinc-300 px-2 py-1 text-xs"
                         >
                           Prévia
                         </Link>
-                        <PublishControls
-                          externalId={b.external_id}
-                          published={b.published}
-                          eligible={elig.eligible}
-                          reasons={elig.reasons}
-                        />
-                      </div>
-                    </td>
-                  </tr>
-                );
-              })
-            )}
-          </tbody>
-        </table>
-      </div>
+                      </td>
+                    </tr>
+                  );
+                })
+              )}
+            </tbody>
+          </table>
+        </div>
+      </section>
     </main>
   );
 }

@@ -4,19 +4,68 @@ import { revalidatePath } from "next/cache";
 
 import { createClient } from "@/lib/supabase/server";
 import { isRequestAdmin } from "@/lib/auth/admin";
-import { syncOrulo } from "@/lib/orulo/sync";
+import { syncActiveBatch, type SyncBatchResult } from "@/lib/orulo/reconcile-sync";
 import {
   publishBuildingCore,
   unpublishBuildingCore,
   type PublishResult,
 } from "@/lib/orulo/publish";
 
-export type { PublishResult };
+export type { PublishResult, SyncBatchResult };
 
-/** Dispara a sincronização manual da Órulo (resultado gravado em sync_runs). */
-export async function runOruloSync(): Promise<void> {
-  await syncOrulo();
-  revalidatePath("/admin/orulo");
+/**
+ * "Sincronizar agora" — UM lote da reconciliação incremental segura (verdade em
+ * /ids/active; detalhe só de novos/alterados; backoff/Retry-After). O cliente
+ * repete até `remaining` = 0. Bounded para não estourar timeout; idempotente e
+ * retomável. Server Actions são públicas → exige admin antes de qualquer efeito.
+ */
+export async function runOruloSyncBatch(
+  detailBatch = 2,
+): Promise<SyncBatchResult> {
+  const supabase = await createClient();
+  if (!(await isRequestAdmin(supabase))) {
+    return {
+      found: 0,
+      created: 0,
+      updated: 0,
+      unchanged: 0,
+      failed: 0,
+      remaining: 0,
+      distributionSet: 0,
+      distributionCleared: 0,
+      failures: [],
+      error: "Não autorizado.",
+    };
+  }
+
+  const startedAt = new Date().toISOString();
+  const res = await syncActiveBatch(supabase, detailBatch);
+
+  if (res.created + res.updated + res.distributionSet + res.distributionCleared > 0) {
+    revalidatePath("/admin/orulo");
+    revalidatePath("/empreendimentos");
+    revalidatePath("/imoveis");
+  }
+
+  // Registra a execução em orulo_sync_runs apenas ao FECHAR um ciclo (nada mais
+  // pendente) ou em falha — evita uma linha por lote e mantém "Última
+  // reconciliação"/"Status" no admin verdadeiros.
+  if (!res.error && (res.remaining === 0 || res.failed > 0)) {
+    await supabase.from("orulo_sync_runs").insert({
+      started_at: startedAt,
+      finished_at: new Date().toISOString(),
+      status: res.failed > 0 ? "error" : "success",
+      buildings_found: res.found,
+      created_count: res.created,
+      updated_count: res.updated,
+      error_summary:
+        res.failures.length > 0
+          ? res.failures.slice(0, 5).map((f) => `${f.id}: ${f.error}`).join(" | ").slice(0, 500)
+          : null,
+    });
+  }
+
+  return res;
 }
 
 // ---------------------------------------------------------------------------

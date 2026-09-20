@@ -6,7 +6,7 @@ import { createClient } from "@/lib/supabase/server";
 import type { Database, Json, TablesInsert } from "@/types/database";
 import { slugify } from "@/lib/slug";
 import { OruloError, isOruloConfigured } from "./config";
-import { oruloGet } from "./client";
+import { oruloGet, type OruloGetOpts } from "./client";
 import { ORULO_MEDIA_DIMENSIONS_QS } from "./images";
 
 /** Cliente Supabase aceito pelas rotinas de sync (SSR ou service role). */
@@ -38,7 +38,7 @@ type ActiveIdsPage = {
 type UnknownRecord = Record<string, unknown>;
 
 /** Converte data da Órulo ("dd/MM/yyyy HH:mm:ss") em ISO; null se inválida. */
-function parseOruloDate(v: unknown): string | null {
+export function parseOruloDate(v: unknown): string | null {
   if (typeof v !== "string") return null;
   const m = v.match(/^(\d{2})\/(\d{2})\/(\d{4})\s+(\d{2}):(\d{2}):(\d{2})$/);
   if (!m) return null;
@@ -173,10 +173,12 @@ async function listActiveBuildingIds(): Promise<{
 async function fetchBuildingMedia(
   buildingId: string,
   kind: "images" | "floor_plans",
+  opts?: OruloGetOpts,
 ): Promise<Json | null> {
   try {
     const data = await oruloGet<UnknownRecord>(
       `/api/v2/buildings/${buildingId}/${kind}?${ORULO_MEDIA_DIMENSIONS_QS}`,
+      opts,
     );
     const arr = data[kind];
     return Array.isArray(arr) && arr.length > 0 ? (arr as Json) : null;
@@ -203,6 +205,7 @@ export async function upsertBuildingById(
   supabase: Db,
   externalId: string,
   existingIds?: Set<string>,
+  opts?: OruloGetOpts,
 ): Promise<UpsertBuildingOutcome> {
   let existedBefore: boolean;
   if (existingIds) {
@@ -216,7 +219,9 @@ export async function upsertBuildingById(
     existedBefore = Boolean(data);
   }
 
-  const raw = asRecord(await oruloGet<unknown>(`/api/v2/buildings/${externalId}`));
+  const raw = asRecord(
+    await oruloGet<unknown>(`/api/v2/buildings/${externalId}`, opts),
+  );
   // Fonte primária de mídia: endpoints dedicados /images e /floor_plans com
   // dimensions[] — trazem as URLs reais (nome em hash). O array id-only do
   // detalhe é fallback para mídia antiga (nome de arquivo == id).
@@ -224,9 +229,10 @@ export async function upsertBuildingById(
   const rawFloorPlans = (
     Array.isArray(raw.floor_plans) ? raw.floor_plans : null
   ) as Json;
-  const images = (await fetchBuildingMedia(externalId, "images")) ?? rawImages;
+  const images =
+    (await fetchBuildingMedia(externalId, "images", opts)) ?? rawImages;
   const floorPlans =
-    (await fetchBuildingMedia(externalId, "floor_plans")) ?? rawFloorPlans;
+    (await fetchBuildingMedia(externalId, "floor_plans", opts)) ?? rawFloorPlans;
 
   const row = extractBuildingFields(externalId, raw, images, floorPlans);
   const { error } = await supabase
