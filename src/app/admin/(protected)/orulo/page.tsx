@@ -240,7 +240,8 @@ export default async function OruloPage() {
       </section>
 
       {/* Publicação controlada dos empreendimentos já em distribuição */}
-      <PublishEligibleButton pending={pending} />
+      {/* Bloco de publicação em lote só aparece quando há pendentes. */}
+      {pending > 0 ? <PublishEligibleButton pending={pending} /> : null}
 
       {!configured ? (
         <p className="rounded border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-800">
