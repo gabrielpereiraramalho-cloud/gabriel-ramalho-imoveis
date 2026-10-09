@@ -197,7 +197,7 @@ export default async function Home() {
             {oportunidades.map((item, index) => (
               <div
                 key={item.key}
-                className={index >= 2 ? "hidden sm:block" : undefined}
+                className={index >= 2 ? "hidden h-full sm:block" : "h-full"}
               >
                 {item.kind === "building" ? (
                   <BuildingCard card={item.building} />

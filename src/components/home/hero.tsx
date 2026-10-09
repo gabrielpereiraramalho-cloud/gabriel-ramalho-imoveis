@@ -29,9 +29,9 @@ export function Hero({
   return (
     <section className="bg-offwhite">
       <div className="mx-auto w-full max-w-[1440px] px-4 sm:px-6 lg:px-8">
-        <div className="grid items-center gap-6 py-8 sm:gap-10 sm:py-12 lg:min-h-[600px] lg:grid-cols-[1fr_1.05fr] lg:gap-14 lg:py-20">
+        <div className="grid items-center gap-5 py-6 sm:gap-10 sm:py-12 lg:min-h-[600px] lg:grid-cols-[1fr_1.05fr] lg:gap-14 lg:py-20">
           {/* Texto */}
-          <div className="flex flex-col gap-6">
+          <div className="flex flex-col gap-5 sm:gap-6">
             <span className="text-xs font-semibold uppercase tracking-[0.2em] text-brand-gold">
               Imóveis em João Pessoa e região
             </span>

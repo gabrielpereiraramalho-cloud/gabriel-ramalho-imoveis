@@ -15,7 +15,7 @@ export function SellCta() {
         </div>
         <Link
           href="/anunciar-imovel"
-          className="shrink-0 rounded-full bg-brand-gold px-6 py-3 text-sm font-semibold text-brand-navy-dark transition-colors hover:bg-brand-gold-light"
+          className="w-full shrink-0 rounded-full bg-brand-gold px-6 py-3 text-center text-sm font-semibold text-brand-navy-dark transition-colors hover:bg-brand-gold-light sm:w-auto"
         >
           Quero anunciar meu imóvel
         </Link>

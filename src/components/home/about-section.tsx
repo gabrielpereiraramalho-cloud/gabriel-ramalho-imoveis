@@ -9,6 +9,8 @@ type Partner = {
   initials: string;
   photo: string;
   roles: string[];
+  /** Enquadramento do rosto p/ alinhar as duas fotos (object-position). */
+  objectPosition: string;
 };
 
 /**
@@ -23,6 +25,7 @@ export function AboutSection() {
       initials: "GR",
       photo: "/gabriel-corretor.jpeg",
       roles: [`${siteConfig.brokerRole} — ${siteConfig.creci}`, "Engenheiro Civil"],
+      objectPosition: "50% 16%",
     },
     {
       name: "Philipe Ramalho",
@@ -32,6 +35,7 @@ export function AboutSection() {
         "Gestão e Desenvolvimento de Negócios",
         "Formação em Transações Imobiliárias em andamento",
       ],
+      objectPosition: "50% 28%",
     },
   ];
 
@@ -57,15 +61,21 @@ export function AboutSection() {
           </p>
         </div>
 
-        {/* Sócios */}
-        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 sm:gap-8">
+        {/* Sócios — cards padronizados (mesma altura, mesma foto, mesmo ritmo).
+            2 colunas só a partir de lg; no tablet fica 1 coluna larga (sem aperto). */}
+        <div className="grid grid-cols-1 items-stretch gap-6 lg:grid-cols-2 lg:gap-8">
           {partners.map((p) => (
             <article
               key={p.name}
-              className="flex flex-col gap-5 rounded-xl border border-brand-navy/10 bg-offwhite/40 p-5 sm:flex-row sm:items-center sm:gap-6 sm:p-6"
+              className="flex h-full flex-col items-center gap-5 rounded-xl border border-brand-navy/10 bg-offwhite/40 p-5 text-center sm:flex-row sm:items-center sm:gap-6 sm:p-6 sm:text-left"
             >
-              <div className="relative aspect-[4/5] w-full max-w-[220px] shrink-0 self-center overflow-hidden rounded-lg ring-1 ring-brand-navy/10 sm:w-40">
-                <PartnerPhoto src={p.photo} alt={`${p.name} — ${siteConfig.brand}`} initials={p.initials} />
+              <div className="relative aspect-[4/5] w-36 shrink-0 overflow-hidden rounded-lg ring-1 ring-brand-navy/10 sm:w-40">
+                <PartnerPhoto
+                  src={p.photo}
+                  alt={`${p.name} — ${siteConfig.brand}`}
+                  initials={p.initials}
+                  objectPosition={p.objectPosition}
+                />
               </div>
               <div className="flex flex-col gap-1.5">
                 <span className="font-serif text-xl font-semibold text-brand-navy">
@@ -84,20 +94,20 @@ export function AboutSection() {
           ))}
         </div>
 
-        {/* CTA institucional */}
-        <div className="flex flex-wrap gap-3">
+        {/* CTA institucional — full-width no mobile, inline no desktop */}
+        <div className="flex flex-col gap-3 sm:flex-row">
           {wa ? (
             <WhatsAppLink
               href={wa}
               source="about"
-              className="rounded-md bg-brand-navy px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-brand-navy-dark"
+              className="w-full rounded-md bg-brand-navy px-6 py-3 text-center text-sm font-semibold text-white transition-colors hover:bg-brand-navy-dark sm:w-auto"
             >
               Fale com a {siteConfig.brand}
             </WhatsAppLink>
           ) : null}
           <Link
             href="/imoveis"
-            className="rounded-md border border-brand-navy/25 px-6 py-3 text-sm font-semibold text-brand-navy transition-colors hover:bg-brand-navy hover:text-white"
+            className="w-full rounded-md border border-brand-navy/25 px-6 py-3 text-center text-sm font-semibold text-brand-navy transition-colors hover:bg-brand-navy hover:text-white sm:w-auto"
           >
             Ver imóveis
           </Link>

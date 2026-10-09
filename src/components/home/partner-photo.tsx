@@ -11,10 +11,13 @@ export function PartnerPhoto({
   src,
   alt,
   initials,
+  objectPosition = "50% 20%",
 }: {
   src: string;
   alt: string;
   initials: string;
+  /** Enquadramento do rosto (object-position) p/ alinhar as duas fotos. */
+  objectPosition?: string;
 }) {
   const [ok, setOk] = useState(true);
   return (
@@ -29,8 +32,9 @@ export function PartnerPhoto({
           src={src}
           alt={alt}
           fill
-          sizes="(max-width: 1024px) 100vw, 320px"
-          className="object-cover object-top"
+          sizes="(max-width: 640px) 200px, 160px"
+          className="object-cover"
+          style={{ objectPosition }}
           onError={() => setOk(false)}
         />
       ) : null}

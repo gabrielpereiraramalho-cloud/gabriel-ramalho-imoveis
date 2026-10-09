@@ -29,9 +29,9 @@ function BrandLogo() {
           width={2172}
           height={724}
           priority
-          sizes="(min-width: 1024px) 200px, 160px"
+          sizes="(min-width: 1024px) 230px, 190px"
           onError={() => setImgOk(false)}
-          className="h-10 w-auto sm:h-11 lg:h-12"
+          className="h-11 w-auto sm:h-12 lg:h-14"
         />
       ) : (
         <span className="font-serif text-xl font-semibold tracking-tight text-brand-navy">

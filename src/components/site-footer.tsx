@@ -32,20 +32,23 @@ export function SiteFooter() {
   return (
     <footer className="bg-brand-navy-dark text-offwhite">
       <div className="mx-auto grid w-full max-w-[1440px] gap-6 px-4 py-8 sm:grid-cols-2 sm:gap-8 sm:py-12 lg:grid-cols-3">
-        <div className="flex flex-col gap-3">
+        <div className="flex flex-col gap-2.5">
+          {/* Largura fixa + altura automática: preserva o aspect-ratio da logo
+              e evita o esticamento que ocorria com w-auto dentro de flex-col
+              (align-items: stretch deformava a largura). */}
           <Image
             src={brandLogoLight}
             alt={siteConfig.brand}
             width={2172}
             height={724}
-            className="h-9 w-auto"
+            className="h-auto w-[160px] max-w-full"
           />
-          <span className="text-sm text-brand-gold-light">
+          <span className="text-xs tracking-wide text-brand-gold-light">
             {siteConfig.slogan}
           </span>
           {/* Responsabilidade profissional — o CRECI é pessoal do corretor,
               nunca apresentado como registro da empresa. */}
-          <div className="mt-2 flex flex-col text-sm">
+          <div className="mt-2.5 flex flex-col text-sm">
             <span className="text-xs font-semibold uppercase tracking-widest text-offwhite/60">
               Corretor responsável
             </span>

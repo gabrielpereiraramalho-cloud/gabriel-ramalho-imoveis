@@ -29,7 +29,7 @@ export function FeaturedProperties({
   return (
     <div className={`grid grid-cols-2 gap-4 sm:gap-6 ${cols}`}>
       {items.map((card, index) => (
-        <div key={card.id} className={index >= 2 ? "hidden sm:block" : undefined}>
+        <div key={card.id} className={index >= 2 ? "hidden h-full sm:block" : "h-full"}>
           <PropertyCard card={card} />
         </div>
       ))}

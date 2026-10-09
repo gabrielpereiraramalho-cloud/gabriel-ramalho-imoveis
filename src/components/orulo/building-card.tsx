@@ -38,7 +38,7 @@ export function BuildingCard({ card }: { card: OruloBuildingCard }) {
   return (
     <Link
       href={`/empreendimento/${card.slug}`}
-      className="group flex flex-col overflow-hidden rounded-lg border border-zinc-200 bg-white transition-shadow hover:shadow-md"
+      className="group flex h-full flex-col overflow-hidden rounded-lg border border-zinc-200 bg-white transition-shadow hover:shadow-md"
     >
       <div className="relative aspect-[4/3] w-full overflow-hidden bg-offwhite">
         {card.coverUrl ? (
