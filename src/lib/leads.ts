@@ -57,6 +57,6 @@ export function ownerLeadWhatsappUrl(
   if (!digits) return null;
   const number = digits.length <= 11 ? `55${digits}` : digits;
   const greeting = name ? `Olá, ${name}!` : "Olá!";
-  const message = `${greeting} Aqui é Gabriel Ramalho. Recebi pelo meu site as informações do seu imóvel e estou entrando em contato para entender melhor os detalhes.`;
+  const message = `${greeting} Aqui é Gabriel Ramalho, da Ramalho Nexo. Recebi pelo site as informações do seu imóvel e estou entrando em contato para entender melhor os detalhes.`;
   return `https://wa.me/${number}?text=${encodeURIComponent(message)}`;
 }

@@ -4,7 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
 
-import { siteConfig, whatsappUrl } from "@/lib/site";
+import { brandLogoHeader, siteConfig, whatsappUrl } from "@/lib/site";
 import { trackWhatsAppClick } from "@/lib/analytics/events";
 
 const NAV_LINKS: { label: string; href: string }[] = [
@@ -19,30 +19,23 @@ const NAV_LINKS: { label: string; href: string }[] = [
 function BrandLogo() {
   const [imgOk, setImgOk] = useState(true);
   return (
-    <Link href="/" className="flex items-center" aria-label="Página inicial">
+    <Link href="/" className="flex items-center" aria-label="Ramalho Nexo — página inicial">
       {imgOk ? (
-        // A arte ocupa apenas ~1383x285 do canvas 1600x900 (muita margem
-        // transparente). O wrapper recorta o excesso e o object-cover +
-        // object-position ampliam a arte, mantendo a proporção sem cortá-la.
-        <span className="relative block h-12 w-[232px] overflow-hidden sm:h-14 sm:w-[280px] lg:h-[72px] lg:w-[380px]">
-          <Image
-            src="/logo-gabriel-ramalho.png"
-            alt="Gabriel Ramalho — Corretor de Imóveis"
-            fill
-            priority
-            sizes="(min-width: 1024px) 380px, 280px"
-            onError={() => setImgOk(false)}
-            className="object-cover object-[50%_46%]"
-          />
-        </span>
+        // Logo horizontal Ramalho Nexo (2172x724, proporção ~3:1). Altura fixa +
+        // largura automática: nítida e proporcional, sem esticar nem cortar.
+        <Image
+          src={brandLogoHeader}
+          alt="Ramalho Nexo"
+          width={2172}
+          height={724}
+          priority
+          sizes="(min-width: 1024px) 200px, 160px"
+          onError={() => setImgOk(false)}
+          className="h-10 w-auto sm:h-11 lg:h-12"
+        />
       ) : (
-        <span className="flex flex-col leading-tight">
-          <span className="font-serif text-lg font-semibold text-brand-navy">
-            Gabriel Ramalho
-          </span>
-          <span className="text-[11px] uppercase tracking-widest text-brand-gold">
-            Corretor de Imóveis
-          </span>
+        <span className="font-serif text-xl font-semibold tracking-tight text-brand-navy">
+          Ramalho Nexo
         </span>
       )}
     </Link>
@@ -52,7 +45,7 @@ function BrandLogo() {
 export function SiteHeader() {
   const [open, setOpen] = useState(false);
   const wa = whatsappUrl(
-    `Olá, ${siteConfig.brand}! Gostaria de conversar sobre imóveis.`,
+    `Olá! Gostaria de mais informações sobre os imóveis da ${siteConfig.brand}.`,
   );
 
   return (

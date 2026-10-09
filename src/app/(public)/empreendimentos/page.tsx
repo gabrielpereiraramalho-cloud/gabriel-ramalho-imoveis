@@ -12,7 +12,7 @@ export const metadata: Metadata = {
   description: DESCRIPTION,
   alternates: { canonical: "/empreendimentos" },
   openGraph: {
-    title: "Empreendimentos e lançamentos | Gabriel Ramalho Imóveis",
+    title: "Empreendimentos e lançamentos | Ramalho Nexo",
     description: DESCRIPTION,
     url: "/empreendimentos",
     images: [{ url: defaultOgImage }],

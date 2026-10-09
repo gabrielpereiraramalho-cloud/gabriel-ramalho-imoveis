@@ -13,15 +13,22 @@ export const siteUrl = (
 ).replace(/\/+$/, "");
 
 export const siteConfig = {
-  brand: "Gabriel Ramalho",
-  role: "Corretor de Imóveis",
+  /** Marca/empresa pública. */
+  brand: "Ramalho Nexo",
+  slogan: "Imóveis que conectam você ao amanhã",
   city: "João Pessoa – PB",
   addressLocality: "João Pessoa",
   addressRegion: "PB",
+  /**
+   * Corretor responsável (PESSOA FÍSICA). O CRECI é pessoal do Gabriel — nunca
+   * da empresa (não há CRECI-J da Ramalho Nexo nesta fase).
+   */
+  responsibleBroker: "Gabriel Ramalho",
+  brokerRole: "Corretor de Imóveis",
+  creci: process.env.NEXT_PUBLIC_CRECI || "CRECI-PB 19875",
   whatsappNumber: onlyDigits(process.env.NEXT_PUBLIC_WHATSAPP_NUMBER),
   instagramUrl: process.env.NEXT_PUBLIC_INSTAGRAM_URL ?? "",
   contactEmail: process.env.NEXT_PUBLIC_CONTACT_EMAIL ?? "",
-  creci: process.env.NEXT_PUBLIC_CRECI ?? "",
   gaMeasurementId: process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID ?? "",
   metaPixelId: process.env.NEXT_PUBLIC_META_PIXEL_ID ?? "",
 };
@@ -31,11 +38,22 @@ export function absoluteUrl(path: string): string {
   return `${siteUrl}${path.startsWith("/") ? path : `/${path}`}`;
 }
 
-/** Imagem Open Graph padrão do site (caminho absoluto). */
-export const defaultOgImage = absoluteUrl("/og-default.png");
+/** Assets de marca Ramalho Nexo (em /public). */
+export const brandLogoHeader =
+  "/logo-ramalho-nexo-horizontal-transparente-escura.png"; // fundo claro
+export const brandLogoLight =
+  "/logo-ramalho-nexo-horizontal-transparente-clara.png"; // fundo escuro
+export const brandSymbol = "/simbolo-rn-transparente.png";
+export const brandSeal = "/selo-ramalho-nexo-transparente.png";
 
-/** Imagem Open Graph premium da HOME (1200x630), URL absoluta. */
-export const homeOgImage = absoluteUrl("/og-home.png");
+/** Imagem Open Graph padrão do site (1200x630, caminho absoluto). */
+export const defaultOgImage = absoluteUrl("/og-default-ramalho-nexo-1200x630.png");
+
+/** Imagem Open Graph premium da HOME (1200x630, URL absoluta). */
+export const homeOgImage = absoluteUrl("/og-home-ramalho-nexo-1200x630.png");
+
+/** Logo absoluta da marca (para JSON-LD / dados estruturados). */
+export const brandLogoAbsolute = absoluteUrl(brandLogoHeader);
 
 /**
  * Serializa dados para JSON-LD de forma segura (escapa `<` para evitar

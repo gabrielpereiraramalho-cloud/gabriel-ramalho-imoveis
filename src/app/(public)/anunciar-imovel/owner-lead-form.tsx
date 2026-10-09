@@ -25,7 +25,7 @@ function SuccessPanel({
   }, [tracking]);
 
   const wa = whatsappUrl(
-    "Olá, Gabriel Ramalho! Acabei de enviar as informações do meu imóvel pelo site e gostaria de continuar o atendimento por aqui.",
+    "Olá! Acabei de enviar as informações do meu imóvel pelo site da Ramalho Nexo e gostaria de continuar o atendimento por aqui.",
   );
 
   return (

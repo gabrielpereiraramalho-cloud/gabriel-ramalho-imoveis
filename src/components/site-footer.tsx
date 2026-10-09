@@ -1,6 +1,7 @@
+import Image from "next/image";
 import Link from "next/link";
 
-import { siteConfig, whatsappUrl } from "@/lib/site";
+import { brandLogoLight, siteConfig, whatsappUrl } from "@/lib/site";
 import { WhatsAppLink } from "@/components/whatsapp-link";
 
 const NAV_LINKS: { label: string; href: string }[] = [
@@ -14,7 +15,7 @@ const NAV_LINKS: { label: string; href: string }[] = [
 
 export function SiteFooter() {
   const wa = whatsappUrl(
-    `Olá, ${siteConfig.brand}! Gostaria de mais informações.`,
+    `Olá! Gostaria de mais informações sobre os imóveis da ${siteConfig.brand}.`,
   );
   const year = new Date().getFullYear();
 
@@ -31,19 +32,31 @@ export function SiteFooter() {
   return (
     <footer className="bg-brand-navy-dark text-offwhite">
       <div className="mx-auto grid w-full max-w-[1440px] gap-6 px-4 py-8 sm:grid-cols-2 sm:gap-8 sm:py-12 lg:grid-cols-3">
-        <div className="flex flex-col gap-1">
-          <span className="font-serif text-xl font-semibold">
-            {siteConfig.brand}
-          </span>
+        <div className="flex flex-col gap-3">
+          <Image
+            src={brandLogoLight}
+            alt={siteConfig.brand}
+            width={2172}
+            height={724}
+            className="h-9 w-auto"
+          />
           <span className="text-sm text-brand-gold-light">
-            {siteConfig.role}
+            {siteConfig.slogan}
           </span>
-          {siteConfig.creci ? (
-            <span className="mt-2 text-sm text-offwhite/70">
-              {siteConfig.creci}
+          {/* Responsabilidade profissional — o CRECI é pessoal do corretor,
+              nunca apresentado como registro da empresa. */}
+          <div className="mt-2 flex flex-col text-sm">
+            <span className="text-xs font-semibold uppercase tracking-widest text-offwhite/60">
+              Corretor responsável
             </span>
-          ) : null}
-          <span className="text-sm text-offwhite/70">{siteConfig.city}</span>
+            <span className="text-offwhite/85">
+              {siteConfig.responsibleBroker}
+            </span>
+            {siteConfig.creci ? (
+              <span className="text-offwhite/70">{siteConfig.creci}</span>
+            ) : null}
+            <span className="text-offwhite/70">{siteConfig.city}</span>
+          </div>
         </div>
 
         <nav className="flex flex-col gap-2">
@@ -96,7 +109,7 @@ export function SiteFooter() {
 
       <div className="border-t border-white/10">
         <p className="mx-auto w-full max-w-[1440px] px-4 py-4 text-xs text-offwhite/60">
-          © {year} {siteConfig.brand} · {siteConfig.role}
+          © {year} {siteConfig.brand} · {siteConfig.slogan}
         </p>
       </div>
     </footer>

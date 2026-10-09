@@ -23,7 +23,7 @@ export function Hero({
   featured?: PropertyCard[];
 }) {
   const wa = whatsappUrl(
-    `Olá, ${siteConfig.brand}! Gostaria de falar sobre imóveis.`,
+    `Olá! Gostaria de mais informações sobre os imóveis da ${siteConfig.brand}.`,
   );
 
   return (
@@ -42,6 +42,10 @@ export function Hero({
               Uma seleção de imóveis para morar, investir e viver bem nas
               melhores regiões da cidade.
             </p>
+            {/* Slogan da marca, discreto */}
+            <p className="font-serif text-base italic text-brand-navy/70 sm:text-lg">
+              {siteConfig.slogan}.
+            </p>
             <div className="flex flex-wrap gap-3">
               <Link
                 href="/imoveis"
@@ -55,7 +59,7 @@ export function Hero({
                   source="hero"
                   className="rounded-md border border-brand-navy/25 px-6 py-3 text-sm font-semibold text-brand-navy transition-colors hover:bg-brand-navy hover:text-white"
                 >
-                  Falar com Gabriel
+                  Fale com a {siteConfig.brand}
                 </WhatsAppLink>
               ) : null}
             </div>

@@ -17,14 +17,16 @@ const playfair = Playfair_Display({
 });
 
 const DESCRIPTION =
-  "Imóveis selecionados para comprar, morar ou investir em João Pessoa e região. Atendimento personalizado com Gabriel Ramalho, CRECI-PB 19875.";
+  "Ramalho Nexo — imóveis selecionados para comprar, morar ou investir em João Pessoa e região. Apartamentos, casas e lançamentos com atendimento próximo. Corretor responsável: Gabriel Ramalho (CRECI-PB 19875).";
+
+const TITLE = "Ramalho Nexo | Imóveis em João Pessoa";
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
-  applicationName: "Gabriel Ramalho Imóveis",
+  applicationName: "Ramalho Nexo",
   title: {
-    default: "Gabriel Ramalho Imóveis | Imóveis em João Pessoa",
-    template: "%s | Gabriel Ramalho Imóveis",
+    default: TITLE,
+    template: "%s | Ramalho Nexo",
   },
   description: DESCRIPTION,
   authors: [{ name: siteConfig.brand }],
@@ -34,15 +36,15 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     locale: "pt_BR",
-    siteName: "Gabriel Ramalho Imóveis",
-    title: "Gabriel Ramalho Imóveis | Imóveis em João Pessoa",
+    siteName: "Ramalho Nexo",
+    title: TITLE,
     description: DESCRIPTION,
     url: siteUrl,
     images: [{ url: defaultOgImage }],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Gabriel Ramalho Imóveis | Imóveis em João Pessoa",
+    title: TITLE,
     description: DESCRIPTION,
     images: [defaultOgImage],
   },
