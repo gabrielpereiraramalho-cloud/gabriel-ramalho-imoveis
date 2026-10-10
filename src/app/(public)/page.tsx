@@ -27,7 +27,7 @@ import { SellCta } from "@/components/home/sell-cta";
 import { AboutSection } from "@/components/home/about-section";
 
 const HOME_DESCRIPTION =
-  "Encontre apartamentos, casas e lançamentos em João Pessoa e região com a Ramalho Nexo. Imóveis selecionados para morar ou investir, com atendimento próximo.";
+  "Encontre apartamentos, casas e lançamentos em João Pessoa e região com a Ramalho Nexo · Negócios Imobiliários. Imóveis selecionados para morar ou investir, com atendimento próximo.";
 
 const HOME_TITLE = "Imóveis em João Pessoa | Ramalho Nexo";
 
@@ -77,11 +77,12 @@ function realEstateAgentJsonLd() {
     "@context": "https://schema.org",
     "@type": "RealEstateAgent",
     name: siteConfig.brand,
+    alternateName: `${siteConfig.brand} · ${siteConfig.signature}`,
     url: siteUrl,
     image: defaultOgImage,
     logo: brandLogoAbsolute,
     slogan: siteConfig.slogan,
-    description: `${siteConfig.brand} — imóveis em ${siteConfig.addressLocality} e região. ${siteConfig.slogan}.`,
+    description: `${siteConfig.brand} · ${siteConfig.signature} — imóveis em ${siteConfig.addressLocality} e região. ${siteConfig.slogan}.`,
     areaServed: { "@type": "City", name: siteConfig.addressLocality },
     address: {
       "@type": "PostalAddress",

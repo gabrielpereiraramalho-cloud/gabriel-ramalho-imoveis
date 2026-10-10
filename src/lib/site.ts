@@ -15,6 +15,8 @@ export const siteUrl = (
 export const siteConfig = {
   /** Marca/empresa pública. */
   brand: "Ramalho Nexo",
+  /** Assinatura institucional (segmento), exibida junto da marca. */
+  signature: "Negócios Imobiliários",
   slogan: "Imóveis que conectam você ao amanhã",
   city: "João Pessoa – PB",
   addressLocality: "João Pessoa",
@@ -93,7 +95,8 @@ export function buildShareMessage(parts: {
   const heading = parts.location
     ? `${parts.title} — ${parts.location}`
     : parts.title;
-  return [parts.intro, heading, parts.price, parts.url]
+  // Assinatura discreta ao final (não altera URL, tracking nem o evento).
+  return [parts.intro, heading, parts.price, parts.url, `via ${siteConfig.brand}`]
     .filter(Boolean)
     .join("\n");
 }

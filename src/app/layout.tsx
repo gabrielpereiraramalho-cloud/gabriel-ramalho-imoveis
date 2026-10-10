@@ -17,7 +17,7 @@ const playfair = Playfair_Display({
 });
 
 const DESCRIPTION =
-  "Ramalho Nexo — imóveis selecionados para comprar, morar ou investir em João Pessoa e região. Apartamentos, casas e lançamentos com atendimento próximo. Corretor responsável: Gabriel Ramalho (CRECI-PB 19875).";
+  "Ramalho Nexo · Negócios Imobiliários — imóveis selecionados para comprar, morar ou investir em João Pessoa e região. Apartamentos, casas e lançamentos com atendimento próximo. Corretor responsável: Gabriel Ramalho (CRECI-PB 19875).";
 
 const TITLE = "Ramalho Nexo | Imóveis em João Pessoa";
 

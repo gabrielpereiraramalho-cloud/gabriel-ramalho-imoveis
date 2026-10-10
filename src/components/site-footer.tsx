@@ -43,7 +43,10 @@ export function SiteFooter() {
             height={724}
             className="h-auto w-[160px] max-w-full"
           />
-          <span className="text-xs tracking-wide text-brand-gold-light">
+          <span className="text-[11px] font-semibold uppercase tracking-[0.18em] text-brand-gold-light">
+            {siteConfig.signature}
+          </span>
+          <span className="text-xs tracking-wide text-offwhite/70">
             {siteConfig.slogan}
           </span>
           {/* Responsabilidade profissional — o CRECI é pessoal do corretor,
