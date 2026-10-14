@@ -40,7 +40,7 @@ export function AboutSection() {
   ];
 
   const wa = whatsappUrl(
-    `Olá! Gostaria de mais informações sobre os imóveis da ${siteConfig.brand}.`,
+    "Olá! Gostaria de mais informações sobre os imóveis.",
   );
 
   return (
@@ -49,15 +49,15 @@ export function AboutSection() {
         {/* Cabeçalho institucional */}
         <div className="flex max-w-3xl flex-col gap-4">
           <span className="text-xs font-semibold uppercase tracking-[0.2em] text-brand-gold">
-            A {siteConfig.brand}
+            Atendimento
           </span>
           <h2 className="font-serif text-3xl font-semibold text-brand-navy sm:text-4xl">
-            Quem está à frente da {siteConfig.brand}
+            Quem atende você
           </h2>
           <p className="text-zinc-700">
-            A {siteConfig.brand} une experiência técnica, visão de negócio e
-            relacionamento para conectar pessoas às melhores oportunidades
-            imobiliárias em {siteConfig.addressLocality} e região.
+            Experiência técnica, visão de negócio e relacionamento para conectar
+            você às melhores oportunidades imobiliárias em{" "}
+            {siteConfig.addressLocality} e região.
           </p>
         </div>
 
@@ -72,7 +72,7 @@ export function AboutSection() {
               <div className="relative aspect-[4/5] w-36 shrink-0 overflow-hidden rounded-lg ring-1 ring-brand-navy/10 sm:w-40">
                 <PartnerPhoto
                   src={p.photo}
-                  alt={`${p.name} — ${siteConfig.brand}`}
+                  alt={p.name}
                   initials={p.initials}
                   objectPosition={p.objectPosition}
                 />
@@ -80,9 +80,6 @@ export function AboutSection() {
               <div className="flex flex-col gap-1.5">
                 <span className="font-serif text-xl font-semibold text-brand-navy">
                   {p.name}
-                </span>
-                <span className="text-xs font-semibold uppercase tracking-widest text-brand-gold">
-                  Sócio-fundador
                 </span>
                 <div className="mt-1 flex flex-col gap-0.5 text-sm text-zinc-600">
                   {p.roles.map((r) => (
@@ -102,7 +99,7 @@ export function AboutSection() {
               source="about"
               className="w-full rounded-md bg-brand-navy px-6 py-3 text-center text-sm font-semibold text-white transition-colors hover:bg-brand-navy-dark sm:w-auto"
             >
-              Fale com a {siteConfig.brand}
+              Falar com Gabriel
             </WhatsAppLink>
           ) : null}
           <Link

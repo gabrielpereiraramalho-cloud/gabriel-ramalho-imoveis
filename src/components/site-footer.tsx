@@ -15,7 +15,7 @@ const NAV_LINKS: { label: string; href: string }[] = [
 
 export function SiteFooter() {
   const wa = whatsappUrl(
-    `Olá! Gostaria de mais informações sobre os imóveis da ${siteConfig.brand}.`,
+    "Olá! Gostaria de mais informações sobre os imóveis.",
   );
   const year = new Date().getFullYear();
 
@@ -33,31 +33,29 @@ export function SiteFooter() {
     <footer className="bg-brand-navy-dark text-offwhite">
       <div className="mx-auto grid w-full max-w-[1440px] gap-6 px-4 py-8 sm:grid-cols-2 sm:gap-8 sm:py-12 lg:grid-cols-3">
         <div className="flex flex-col gap-2.5">
-          {/* Largura fixa + altura automática: preserva o aspect-ratio da logo
-              e evita o esticamento que ocorria com w-auto dentro de flex-col
-              (align-items: stretch deformava a largura). */}
+          {/* Wordmark claro (boa legibilidade no fundo navy). Largura fixa +
+              altura automática preserva o aspect-ratio sem esticar. */}
           <Image
             src={brandLogoLight}
-            alt={siteConfig.brand}
+            alt="Símbolo RN"
             width={2172}
             height={724}
             className="h-auto w-[160px] max-w-full"
           />
-          <span className="text-[11px] font-semibold uppercase tracking-[0.18em] text-brand-gold-light">
-            {siteConfig.signature}
-          </span>
           <span className="text-xs tracking-wide text-offwhite/70">
             {siteConfig.slogan}
           </span>
-          {/* Responsabilidade profissional — o CRECI é pessoal do corretor,
-              nunca apresentado como registro da empresa. */}
+          {/* Responsabilidade legal: a intermediação imobiliária é exercida por
+              Gabriel Ramalho (pessoa física), Corretor de Imóveis. O CRECI é
+              pessoal do corretor, nunca apresentado como registro de empresa. */}
           <div className="mt-2.5 flex flex-col text-sm">
             <span className="text-xs font-semibold uppercase tracking-widest text-offwhite/60">
-              Corretor responsável
+              Responsável pela intermediação imobiliária
             </span>
             <span className="text-offwhite/85">
               {siteConfig.responsibleBroker}
             </span>
+            <span className="text-offwhite/70">{siteConfig.brokerRole}</span>
             {siteConfig.creci ? (
               <span className="text-offwhite/70">{siteConfig.creci}</span>
             ) : null}
@@ -115,7 +113,8 @@ export function SiteFooter() {
 
       <div className="border-t border-white/10">
         <p className="mx-auto w-full max-w-[1440px] px-4 py-4 text-xs text-offwhite/60">
-          © {year} {siteConfig.brand} · {siteConfig.slogan}
+          © {year} {siteConfig.responsibleBroker} · {siteConfig.brokerRole} ·{" "}
+          {siteConfig.creci}
         </p>
       </div>
     </footer>

@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import { siteConfig } from "@/lib/site";
 
 export const metadata: Metadata = {
-  title: "Política de Privacidade | Ramalho Nexo",
+  title: "Política de Privacidade",
 };
 
 export default function PoliticaDePrivacidadePage() {
@@ -13,14 +13,14 @@ export default function PoliticaDePrivacidadePage() {
         Política de Privacidade
       </h1>
       <p className="text-zinc-700">
-        Os dados eventualmente informados neste site da {siteConfig.brand} (como
-        nome, telefone e e-mail em contatos) são utilizados exclusivamente para o
-        atendimento relacionado a imóveis e não são compartilhados com terceiros
-        para fins de marketing.
+        Os dados eventualmente informados neste site (como nome, telefone e
+        e-mail em contatos) são utilizados exclusivamente para o atendimento
+        relacionado a imóveis e não são compartilhados com terceiros para fins
+        de marketing.
       </p>
       <p className="text-zinc-700">
         Para dúvidas sobre o tratamento das suas informações, entre em contato
-        com a {siteConfig.brand}
+        com {siteConfig.responsibleBroker}
         {siteConfig.contactEmail ? ` pelo e-mail ${siteConfig.contactEmail}` : ""}.
         {" "}
         Atendimento imobiliário sob responsabilidade do corretor{" "}

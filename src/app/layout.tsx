@@ -17,26 +17,26 @@ const playfair = Playfair_Display({
 });
 
 const DESCRIPTION =
-  "Ramalho Nexo · Negócios Imobiliários — imóveis selecionados para comprar, morar ou investir em João Pessoa e região. Apartamentos, casas e lançamentos com atendimento próximo. Corretor responsável: Gabriel Ramalho (CRECI-PB 19875).";
+  "Gabriel Ramalho — Corretor de Imóveis, CRECI-PB 19875. Imóveis selecionados para comprar, morar ou investir em João Pessoa e região. Apartamentos, casas e lançamentos com atendimento próximo.";
 
-const TITLE = "Ramalho Nexo | Imóveis em João Pessoa";
+const TITLE = "Gabriel Ramalho | Corretor de Imóveis em João Pessoa";
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
-  applicationName: "Ramalho Nexo",
+  applicationName: siteConfig.responsibleBroker,
   title: {
     default: TITLE,
-    template: "%s | Ramalho Nexo",
+    template: "%s | Gabriel Ramalho",
   },
   description: DESCRIPTION,
-  authors: [{ name: siteConfig.brand }],
-  creator: siteConfig.brand,
-  publisher: siteConfig.brand,
+  authors: [{ name: siteConfig.responsibleBroker }],
+  creator: siteConfig.responsibleBroker,
+  publisher: siteConfig.responsibleBroker,
   formatDetection: { telephone: false, email: false, address: false },
   openGraph: {
     type: "website",
     locale: "pt_BR",
-    siteName: "Ramalho Nexo",
+    siteName: "Gabriel Ramalho — Corretor de Imóveis",
     title: TITLE,
     description: DESCRIPTION,
     url: siteUrl,

@@ -1,10 +1,5 @@
 import type { OruloBuildingDetail } from "@/lib/orulo/public-queries";
-import {
-  absoluteUrl,
-  buildShareMessage,
-  siteConfig,
-  whatsappUrl,
-} from "@/lib/site";
+import { absoluteUrl, buildShareMessage, whatsappUrl } from "@/lib/site";
 import { PropertyGallery } from "@/components/property-gallery";
 import { FloorPlansGallery } from "@/components/orulo/floor-plans-gallery";
 import { WhatsAppLink } from "@/components/whatsapp-link";
@@ -29,9 +24,9 @@ function range(min: number | null, max: number | null, suffix = ""): string {
 export function BuildingDetail({ b }: { b: OruloBuildingDetail }) {
   const meta = [b.neighborhood, b.city].filter(Boolean).join(", ");
   const wa = whatsappUrl(
-    `Olá, ${siteConfig.brand}! Tenho interesse no empreendimento ${b.name}${
+    `Olá! Tenho interesse no empreendimento ${b.name}${
       meta ? ` (${meta})` : ""
-    } que vi no seu site.`,
+    } que vi no site.`,
   );
   const paragraphs = (b.description ?? "")
     .split(/\n+/)

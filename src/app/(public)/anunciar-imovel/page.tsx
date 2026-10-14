@@ -10,7 +10,7 @@ export const metadata: Metadata = {
   description: DESCRIPTION,
   alternates: { canonical: "/anunciar-imovel" },
   openGraph: {
-    title: "Quero anunciar meu imóvel | Ramalho Nexo",
+    title: "Quero anunciar meu imóvel | Gabriel Ramalho",
     description: DESCRIPTION,
     url: "/anunciar-imovel",
   },

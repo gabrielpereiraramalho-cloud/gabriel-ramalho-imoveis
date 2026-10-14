@@ -1,6 +1,6 @@
 "use client";
 
-import { siteConfig, whatsappUrl } from "@/lib/site";
+import { whatsappUrl } from "@/lib/site";
 import {
   trackPropertyInterest,
   type TrackedProperty,
@@ -16,7 +16,7 @@ export function PropertyWhatsappCta({
   property: TrackedProperty;
 }) {
   const href = whatsappUrl(
-    `Olá, ${siteConfig.brand}! Vi o imóvel ${property.title} - código ${property.code} no seu site e gostaria de mais informações.`,
+    `Olá! Vi o imóvel ${property.title} - código ${property.code} no site e gostaria de mais informações.`,
   );
   if (!href) return null;
 

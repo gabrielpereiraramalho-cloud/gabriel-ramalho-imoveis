@@ -11,7 +11,8 @@ import {
   pickDailyItems,
 } from "@/lib/catalog/queries";
 import {
-  brandLogoAbsolute,
+  absoluteUrl,
+  brandSymbol,
   defaultOgImage,
   homeOgImage,
   jsonLdScript,
@@ -27,9 +28,9 @@ import { SellCta } from "@/components/home/sell-cta";
 import { AboutSection } from "@/components/home/about-section";
 
 const HOME_DESCRIPTION =
-  "Encontre apartamentos, casas e lançamentos em João Pessoa e região com a Ramalho Nexo · Negócios Imobiliários. Imóveis selecionados para morar ou investir, com atendimento próximo.";
+  "Encontre apartamentos, casas e lançamentos em João Pessoa e região com Gabriel Ramalho — Corretor de Imóveis, CRECI-PB 19875. Imóveis selecionados para morar ou investir, com atendimento próximo.";
 
-const HOME_TITLE = "Imóveis em João Pessoa | Ramalho Nexo";
+const HOME_TITLE = "Gabriel Ramalho | Corretor de Imóveis em João Pessoa";
 
 export const metadata: Metadata = {
   title: { absolute: HOME_TITLE },
@@ -44,7 +45,7 @@ export const metadata: Metadata = {
         url: homeOgImage,
         width: 1200,
         height: 630,
-        alt: "Ramalho Nexo — Imóveis em João Pessoa e região",
+        alt: "Gabriel Ramalho — Corretor de Imóveis em João Pessoa e região",
       },
     ],
   },
@@ -57,32 +58,20 @@ export const metadata: Metadata = {
 };
 
 /**
- * Dados estruturados: a MARCA (Ramalho Nexo) é o negócio (RealEstateAgent) e os
- * sócios aparecem como Person. O CRECI-PB 19875 fica SOMENTE em Gabriel (corretor
- * responsável) — nunca na empresa nem em Philipe (que não é corretor).
+ * Dados estruturados (adaptação regulatória temporária): a atividade imobiliária
+ * é apresentada como exercida por Gabriel Ramalho (pessoa física), Corretor de
+ * Imóveis, CRECI-PB 19875 — sem apresentar uma empresa/PJ responsável enquanto
+ * não houver CNPJ + CRECI-J. O CRECI é pessoal do corretor.
  */
 function realEstateAgentJsonLd() {
-  const gabriel = {
-    "@type": "Person",
-    name: siteConfig.responsibleBroker,
-    jobTitle: siteConfig.brokerRole,
-    description: `${siteConfig.brokerRole} — ${siteConfig.creci}`,
-  };
-  const philipe = {
-    "@type": "Person",
-    name: "Philipe Ramalho",
-    jobTitle: "Gestão e Desenvolvimento de Negócios",
-  };
   return {
     "@context": "https://schema.org",
     "@type": "RealEstateAgent",
-    name: siteConfig.brand,
-    alternateName: `${siteConfig.brand} · ${siteConfig.signature}`,
+    name: siteConfig.responsibleBroker,
+    description: `${siteConfig.responsibleBroker} — ${siteConfig.brokerRole}, ${siteConfig.creci}. Imóveis em ${siteConfig.addressLocality} e região.`,
     url: siteUrl,
     image: defaultOgImage,
-    logo: brandLogoAbsolute,
-    slogan: siteConfig.slogan,
-    description: `${siteConfig.brand} · ${siteConfig.signature} — imóveis em ${siteConfig.addressLocality} e região. ${siteConfig.slogan}.`,
+    logo: absoluteUrl(brandSymbol),
     areaServed: { "@type": "City", name: siteConfig.addressLocality },
     address: {
       "@type": "PostalAddress",
@@ -94,8 +83,6 @@ function realEstateAgentJsonLd() {
     ...(siteConfig.whatsappNumber
       ? { telephone: `+${siteConfig.whatsappNumber}` }
       : {}),
-    founder: [gabriel, philipe],
-    employee: [gabriel],
   };
 }
 

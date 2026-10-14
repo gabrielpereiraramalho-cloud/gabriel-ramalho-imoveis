@@ -4,7 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
 
-import { brandLogoHeader, siteConfig, whatsappUrl } from "@/lib/site";
+import { brandSymbol, siteConfig, whatsappUrl } from "@/lib/site";
 import { trackWhatsAppClick } from "@/lib/analytics/events";
 
 const NAV_LINKS: { label: string; href: string }[] = [
@@ -19,25 +19,35 @@ const NAV_LINKS: { label: string; href: string }[] = [
 function BrandLogo() {
   const [imgOk, setImgOk] = useState(true);
   return (
-    <Link href="/" className="flex items-center" aria-label="Ramalho Nexo — página inicial">
+    <Link
+      href="/"
+      className="flex items-center gap-2.5 sm:gap-3"
+      aria-label={`${siteConfig.responsibleBroker} — ${siteConfig.brokerRole} — página inicial`}
+    >
+      {/* Símbolo RN isolado (fundo transparente) — mantém a identidade visual
+          sem exibir a marca como imobiliária responsável. */}
       {imgOk ? (
-        // Logo horizontal Ramalho Nexo (2172x724, proporção ~3:1). Altura fixa +
-        // largura automática: nítida e proporcional, sem esticar nem cortar.
         <Image
-          src={brandLogoHeader}
-          alt="Ramalho Nexo"
-          width={2172}
-          height={724}
+          src={brandSymbol}
+          alt="Símbolo RN"
+          width={1536}
+          height={1024}
           priority
-          sizes="(min-width: 1024px) 230px, 190px"
+          sizes="60px"
           onError={() => setImgOk(false)}
-          className="h-11 w-auto sm:h-12 lg:h-14"
+          className="h-10 w-auto sm:h-11 lg:h-12"
         />
-      ) : (
-        <span className="font-serif text-xl font-semibold tracking-tight text-brand-navy">
-          Ramalho Nexo
+      ) : null}
+      {/* Identificação pública: quem exerce a atividade imobiliária (PF). */}
+      <span className="flex flex-col leading-tight">
+        <span className="font-serif text-base font-semibold tracking-tight text-brand-navy sm:text-lg">
+          {siteConfig.responsibleBroker}
         </span>
-      )}
+        <span className="text-[10px] font-medium uppercase tracking-wide text-brand-navy/60 sm:text-[11px]">
+          {siteConfig.brokerRole}{" "}
+          <span className="text-brand-gold">|</span> {siteConfig.creci}
+        </span>
+      </span>
     </Link>
   );
 }
@@ -45,7 +55,7 @@ function BrandLogo() {
 export function SiteHeader() {
   const [open, setOpen] = useState(false);
   const wa = whatsappUrl(
-    `Olá! Gostaria de mais informações sobre os imóveis da ${siteConfig.brand}.`,
+    "Olá! Gostaria de mais informações sobre os imóveis.",
   );
 
   return (

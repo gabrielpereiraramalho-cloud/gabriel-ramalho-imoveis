@@ -23,7 +23,7 @@ export function Hero({
   featured?: PropertyCard[];
 }) {
   const wa = whatsappUrl(
-    `Olá! Gostaria de mais informações sobre os imóveis da ${siteConfig.brand}.`,
+    "Olá! Gostaria de mais informações sobre os imóveis.",
   );
 
   return (
@@ -39,8 +39,9 @@ export function Hero({
               Encontre seu próximo imóvel em João Pessoa.
             </h1>
             <p className="max-w-xl text-base text-zinc-600 sm:text-lg lg:max-w-2xl">
-              Uma seleção de imóveis para morar, investir e viver bem nas
-              melhores regiões da cidade.
+              Imóveis selecionados para morar, investir ou encontrar uma nova
+              oportunidade em João Pessoa e região, com atendimento de Gabriel
+              Ramalho — Corretor de Imóveis, CRECI-PB 19875.
             </p>
             {/* Slogan da marca, discreto */}
             <p className="font-serif text-base italic text-brand-navy/70 sm:text-lg">
@@ -59,7 +60,7 @@ export function Hero({
                   source="hero"
                   className="rounded-md border border-brand-navy/25 px-6 py-3 text-sm font-semibold text-brand-navy transition-colors hover:bg-brand-navy hover:text-white"
                 >
-                  Fale com a {siteConfig.brand}
+                  Falar com Gabriel
                 </WhatsAppLink>
               ) : null}
             </div>
