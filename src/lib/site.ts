@@ -9,7 +9,7 @@ const onlyDigits = (v: string | undefined): string => (v ?? "").replace(/\D/g, "
 /** URL base do site (sem barra final). Em produção use NEXT_PUBLIC_SITE_URL;
  *  o fallback é o domínio canônico oficial (usado no metadataBase/Open Graph). */
 export const siteUrl = (
-  process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.ramalhonexo.com.br"
+  process.env.NEXT_PUBLIC_SITE_URL ?? "https://gabrielramalhoimoveis.com.br"
 ).replace(/\/+$/, "");
 
 export const siteConfig = {
