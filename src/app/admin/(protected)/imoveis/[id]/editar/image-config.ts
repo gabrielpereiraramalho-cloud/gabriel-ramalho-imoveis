@@ -12,6 +12,29 @@ export const ALLOWED_IMAGE_TYPES = [
 export const MAX_IMAGE_SIZE_BYTES = 10 * 1024 * 1024; // 10 MB
 export const MAX_IMAGES_PER_PROPERTY = 40;
 
+// --- Normalização client-side (Fase 1) --------------------------------------
+/** Maior lado alvo (nunca amplia imagens menores). */
+export const NORMALIZE_MAX_EDGE = 2560;
+/** Qualidade WebP/JPEG (0..1). */
+export const NORMALIZE_QUALITY = 0.82;
+
+/**
+ * Flag de otimização de upload. Ligada por padrão; defina
+ * NEXT_PUBLIC_NORMALIZE_UPLOADS = 0 | false | off para desligar rapidamente
+ * (volta ao comportamento atual: envia o arquivo original aceito).
+ */
+export function isNormalizeUploadsEnabled(): boolean {
+  const v = (process.env.NEXT_PUBLIC_NORMALIZE_UPLOADS ?? "").trim().toLowerCase();
+  return v !== "0" && v !== "false" && v !== "off" && v !== "no";
+}
+
+/** HEIC/HEIF (por MIME ou extensão) — formato não aceito pelo upload atual. */
+export function isHeic(file: File): boolean {
+  const t = (file.type || "").toLowerCase();
+  if (t === "image/heic" || t === "image/heif") return true;
+  return /\.(heic|heif)$/i.test(file.name);
+}
+
 export const EXT_BY_MIME: Record<string, string> = {
   "image/jpeg": "jpg",
   "image/png": "png",

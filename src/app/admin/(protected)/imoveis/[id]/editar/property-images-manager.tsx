@@ -7,7 +7,11 @@ import {
   ALLOWED_IMAGE_TYPES,
   MAX_IMAGE_SIZE_BYTES,
   MAX_IMAGES_PER_PROPERTY,
+  NORMALIZE_MAX_EDGE,
+  NORMALIZE_QUALITY,
   isAllowedType,
+  isHeic,
+  isNormalizeUploadsEnabled,
   type ImageActionResult,
   type ManagedImage,
 } from "./image-config";
@@ -17,6 +21,7 @@ import {
   setCoverImage,
   uploadImage,
 } from "./image-actions";
+import { normalizeImageFile } from "@/lib/images/normalize-image";
 
 const MAX_MB = MAX_IMAGE_SIZE_BYTES / (1024 * 1024);
 
@@ -32,10 +37,13 @@ export function PropertyImagesManager({
   const [progress, setProgress] = useState<string>("");
   const [error, setError] = useState<string>("");
   const [success, setSuccess] = useState<string>("");
+  const [sendOriginal, setSendOriginal] = useState(false);
   const [pending, startTransition] = useTransition();
   const inputRef = useRef<HTMLInputElement>(null);
 
   const busy = uploading || pending;
+  // Flag global (NEXT_PUBLIC_NORMALIZE_UPLOADS) + escolha do usuário por envio.
+  const normalizeEnabled = isNormalizeUploadsEnabled();
 
   function apply(res: ImageActionResult) {
     setImages(res.images);
@@ -48,20 +56,9 @@ export function PropertyImagesManager({
     setSuccess("");
 
     const files = Array.from(fileList);
-    const invalid: string[] = [];
-    const valid: File[] = [];
 
-    for (const file of files) {
-      if (!isAllowedType(file.type)) {
-        invalid.push(`${file.name}: tipo não permitido.`);
-      } else if (file.size > MAX_IMAGE_SIZE_BYTES) {
-        invalid.push(`${file.name}: acima de ${MAX_MB} MB.`);
-      } else {
-        valid.push(file);
-      }
-    }
-
-    if (images.length + valid.length > MAX_IMAGES_PER_PROPERTY) {
+    // Limite de quantidade antes de processar qualquer arquivo.
+    if (images.length + files.length > MAX_IMAGES_PER_PROPERTY) {
       setError(
         `Limite de ${MAX_IMAGES_PER_PROPERTY} imagens por imóvel. ` +
           `Atualmente há ${images.length}.`,
@@ -70,15 +67,61 @@ export function PropertyImagesManager({
       return;
     }
 
+    // Normaliza quando a flag global está ligada e o usuário não pediu original.
+    const normalize = normalizeEnabled && !sendOriginal;
+
     setUploading(true);
     let ok = 0;
-    const failed: string[] = [...invalid];
+    const failed: string[] = [];
 
-    for (let i = 0; i < valid.length; i++) {
-      const file = valid[i];
-      setProgress(`Enviando ${i + 1} de ${valid.length}...`);
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      let toUpload: File = file;
+
+      if (normalize) {
+        setProgress(`Otimizando ${i + 1} de ${files.length}...`);
+        try {
+          const r = await normalizeImageFile(file, {
+            maxEdge: NORMALIZE_MAX_EDGE,
+            quality: NORMALIZE_QUALITY,
+          });
+          toUpload = r.file;
+        } catch {
+          // Normalização falhou.
+          if (isAllowedType(file.type)) {
+            // Formato já aceito pelo sistema → usa o original como fallback.
+            toUpload = file;
+          } else {
+            // HEIC/HEIF (ou outro não aceito) que o navegador não converteu:
+            // marca SOMENTE esta foto e segue com as demais — nunca envia cru.
+            const kind = isHeic(file) ? "HEIC/HEIF" : file.type || "desconhecido";
+            failed.push(
+              `${file.name}: formato ${kind} não pôde ser convertido pelo navegador. ` +
+                `Converta para JPEG/PNG/WEBP/AVIF e tente novamente.`,
+            );
+            continue;
+          }
+        }
+      } else {
+        // Sem normalização (flag off ou checkbox): mantém a validação atual.
+        if (!isAllowedType(file.type)) {
+          failed.push(`${file.name}: tipo não permitido.`);
+          continue;
+        }
+      }
+
+      // Validação de tamanho no arquivo FINAL (após eventual otimização).
+      if (toUpload.size > MAX_IMAGE_SIZE_BYTES) {
+        failed.push(
+          `${file.name}: acima de ${MAX_MB} MB` +
+            (normalize && toUpload !== file ? " mesmo após otimização." : "."),
+        );
+        continue;
+      }
+
+      setProgress(`Enviando ${i + 1} de ${files.length}...`);
       const fd = new FormData();
-      fd.append("file", file);
+      fd.append("file", toUpload);
       const res = await uploadImage(propertyId, fd);
       setImages(res.images);
       if (res.error) {
@@ -94,7 +137,7 @@ export function PropertyImagesManager({
 
     if (ok > 0) setSuccess(`${ok} imagem(ns) enviada(s) com sucesso.`);
     if (failed.length > 0) {
-      setError(`Falha em ${failed.length}: ${failed.join(" | ")}`);
+      setError(`Não enviadas (${failed.length}): ${failed.join(" | ")}`);
     }
   }
 
@@ -147,6 +190,22 @@ export function PropertyImagesManager({
         <p className="text-xs text-zinc-500">
           JPEG, PNG, WEBP ou AVIF. Até {MAX_MB} MB por imagem, máximo de{" "}
           {MAX_IMAGES_PER_PROPERTY} imagens.
+        </p>
+        {normalizeEnabled ? (
+          <label className="flex items-center gap-2 text-xs text-zinc-600 dark:text-zinc-400">
+            <input
+              type="checkbox"
+              checked={sendOriginal}
+              onChange={(e) => setSendOriginal(e.target.checked)}
+              disabled={busy}
+            />
+            Enviar original sem otimizar
+          </label>
+        ) : null}
+        <p className="text-xs text-zinc-400">
+          {normalizeEnabled && !sendOriginal
+            ? `Otimização ligada: as fotos são ajustadas no navegador (máx. ${NORMALIZE_MAX_EDGE}px, WebP) antes do envio, preservando a aparência real.`
+            : "Otimização desligada: as fotos serão enviadas no formato original."}
         </p>
       </div>
 
