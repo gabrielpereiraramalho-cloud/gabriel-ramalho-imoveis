@@ -76,3 +76,34 @@ export function mainPriceLabel(
   }
   return formatBRL(salePrice);
 }
+
+/**
+ * Rótulo do preço SECUNDÁRIO para o card, exibido APENAS quando existem os dois
+ * preços (venda e aluguel). Mostra o oposto da finalidade principal, já
+ * prefixado. Retorna null quando há só um preço → card inalterado (regressão).
+ */
+export function secondaryPriceLabel(
+  purpose: PropertyPurpose,
+  salePrice: number | null,
+  rentPrice: number | null,
+): string | null {
+  if (salePrice === null || rentPrice === null) return null;
+  return purpose === "rent"
+    ? `Venda ${brl.format(salePrice)}`
+    : `Aluguel ${brl.format(rentPrice)}/mês`;
+}
+
+/**
+ * Rótulos rotulados ("Venda:" / "Aluguel:") para o DETALHE, apenas quando há os
+ * dois preços. Retorna null quando há só um (detalhe mantém o preço único atual).
+ */
+export function bothPriceLabels(
+  salePrice: number | null,
+  rentPrice: number | null,
+): { sale: string; rent: string } | null {
+  if (salePrice === null || rentPrice === null) return null;
+  return {
+    sale: `Venda: ${brl.format(salePrice)}`,
+    rent: `Aluguel: ${brl.format(rentPrice)}/mês`,
+  };
+}

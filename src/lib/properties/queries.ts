@@ -313,9 +313,17 @@ export async function listPublicProperties(
   if (featurePropertyIds) query = query.in("id", featurePropertyIds);
   if (cityIds) query = query.in("city_id", cityIds);
   if (neighborhoodIds) query = query.in("neighborhood_id", neighborhoodIds);
-  // Finalidade: OR entre as escolhidas (vazio = todas).
+  // Finalidade por FINALIDADE PRINCIPAL **ou** PRESENÇA do preço correspondente
+  // (vazio = todas). Retrocompatível: um imóvel `sale`/`rent` sem preço continua
+  // aparecendo pela finalidade; um imóvel com os dois preços aparece nos dois
+  // filtros. Órulo é tratada à parte (catalog/queries) e não é afetada.
   if (filters.purposes && filters.purposes.length > 0) {
-    query = query.in("purpose", filters.purposes);
+    const ors: string[] = [];
+    if (filters.purposes.includes("sale"))
+      ors.push("purpose.eq.sale", "sale_price.not.is.null");
+    if (filters.purposes.includes("rent"))
+      ors.push("purpose.eq.rent", "rent_price.not.is.null");
+    if (ors.length > 0) query = query.or(ors.join(","));
   }
   // Tipo (categoria), quartos e vagas são aplicados por BUCKET/OR na camada do
   // catálogo (listPublicCatalog), unificando imóveis manuais e Órulo.

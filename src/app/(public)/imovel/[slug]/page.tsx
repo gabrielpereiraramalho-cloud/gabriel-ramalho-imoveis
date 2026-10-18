@@ -7,6 +7,7 @@ import {
   type PropertyDetail,
 } from "@/lib/properties/queries";
 import {
+  bothPriceLabels,
   CARD_STATUS_LABELS,
   mainPriceLabel,
   SOLAR_LABELS,
@@ -47,9 +48,15 @@ function buildMetaDescription(p: PropertyDetail): string {
   let desc = base;
   if (extra.length > 0) desc += ` com ${extra.join(", ")}`;
 
-  const price = mainPriceLabel(p.purpose, p.salePrice, p.rentPrice);
-  if (price !== "Consulte") {
-    desc += `. ${p.purpose === "rent" ? "Aluguel" : "Venda"}: ${price}`;
+  const both = bothPriceLabels(p.salePrice, p.rentPrice);
+  if (both) {
+    // Dois preços → menciona ambos (texto mais preciso).
+    desc += `. ${both.sale} · ${both.rent}`;
+  } else {
+    const price = mainPriceLabel(p.purpose, p.salePrice, p.rentPrice);
+    if (price !== "Consulte") {
+      desc += `. ${p.purpose === "rent" ? "Aluguel" : "Venda"}: ${price}`;
+    }
   }
   return `${desc}.`.slice(0, 180);
 }
@@ -98,19 +105,42 @@ function propertyJsonLd(p: PropertyDetail): Record<string, unknown> {
   }
   if (p.bathrooms > 0) data.numberOfBathroomsTotal = p.bathrooms;
 
-  const price = p.purpose === "sale" ? p.salePrice : p.rentPrice;
-  if (price !== null) {
-    data.offers = {
+  // Ofertas por PRESENÇA de preço: um Offer quando há só um preço (igual a
+  // hoje); dois Offers (array) quando há venda E aluguel. businessFunction só é
+  // adicionado no caso dos dois, para não alterar listagens de um preço só.
+  const availability =
+    p.status === "available"
+      ? "https://schema.org/InStock"
+      : "https://schema.org/LimitedAvailability";
+  const offerUrl = absoluteUrl(`/imovel/${p.slug}`);
+  const hasBoth = p.salePrice !== null && p.rentPrice !== null;
+  const offers: Record<string, unknown>[] = [];
+  if (p.salePrice !== null) {
+    offers.push({
       "@type": "Offer",
-      price,
+      price: p.salePrice,
       priceCurrency: "BRL",
-      availability:
-        p.status === "available"
-          ? "https://schema.org/InStock"
-          : "https://schema.org/LimitedAvailability",
-      url: absoluteUrl(`/imovel/${p.slug}`),
-    };
+      availability,
+      url: offerUrl,
+      ...(hasBoth
+        ? { businessFunction: "http://purl.org/goodrelations/v1#Sell" }
+        : {}),
+    });
   }
+  if (p.rentPrice !== null) {
+    offers.push({
+      "@type": "Offer",
+      price: p.rentPrice,
+      priceCurrency: "BRL",
+      availability,
+      url: offerUrl,
+      ...(hasBoth
+        ? { businessFunction: "http://purl.org/goodrelations/v1#LeaseOut" }
+        : {}),
+    });
+  }
+  if (offers.length === 1) data.offers = offers[0];
+  else if (offers.length > 1) data.offers = offers;
   return data;
 }
 
@@ -251,6 +281,7 @@ export default async function ImovelPage({ params }: Params) {
           purpose={property.purpose}
           salePrice={property.salePrice}
           rentPrice={property.rentPrice}
+          variant="detail"
           className="text-2xl font-semibold text-brand-navy"
         />
       </header>
