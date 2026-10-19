@@ -1,22 +1,39 @@
 import { createProperty } from "../actions";
 import { loadPropertyFormRefs } from "../data";
 import { PropertyForm } from "../property-form";
+import { QuickCreate } from "./quick-create";
+import { isAiQuickfillEnabled } from "@/lib/ai/config";
+import { isOpenAiConfigured } from "@/lib/ai/provider";
 
 export default async function NovoImovelPage() {
   const { features, partners } = await loadPropertyFormRefs();
+  const aiEnabled = isAiQuickfillEnabled();
 
   return (
     <main className="flex flex-1 flex-col gap-6 p-8">
       <h1 className="text-2xl font-semibold tracking-tight">Novo imóvel</h1>
-      <PropertyForm
-        action={createProperty}
-        submitLabel="Criar imóvel"
-        features={features}
-        partners={partners}
-      />
-      <p className="rounded border border-zinc-200 p-4 text-sm text-zinc-600 dark:border-zinc-800 dark:text-zinc-400">
-        Salve o imóvel primeiro para adicionar fotos.
-      </p>
+
+      {aiEnabled ? (
+        // Flag ligada: assistente de IA + formulário (pré-preenchível).
+        <QuickCreate
+          features={features}
+          partners={partners}
+          aiConfigured={isOpenAiConfigured()}
+        />
+      ) : (
+        // Flag desligada (padrão): cadastro manual EXATAMENTE como antes.
+        <>
+          <PropertyForm
+            action={createProperty}
+            submitLabel="Criar imóvel"
+            features={features}
+            partners={partners}
+          />
+          <p className="rounded border border-zinc-200 p-4 text-sm text-zinc-600 dark:border-zinc-800 dark:text-zinc-400">
+            Salve o imóvel primeiro para adicionar fotos.
+          </p>
+        </>
+      )}
     </main>
   );
 }

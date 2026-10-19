@@ -10,7 +10,7 @@ export async function loadPropertyFormRefs() {
   const [features, partners] = await Promise.all([
     supabase
       .from("features")
-      .select("id, name, category")
+      .select("id, name, slug, category")
       .eq("active", true)
       .order("name"),
     supabase.from("partners").select("id, name").order("name"),
