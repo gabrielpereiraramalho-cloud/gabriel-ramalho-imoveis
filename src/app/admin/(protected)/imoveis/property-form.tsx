@@ -84,16 +84,18 @@ export function PropertyForm({
         <legend className={legendCls}>Identificação</legend>
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="flex flex-col gap-1">
+            {/* Código RN-xxx gerado pelo banco; imutável após a criação. Sem
+                `name` → nunca é enviado no formulário. */}
             <label htmlFor="code" className="text-sm font-medium">
-              Código *
+              Código
             </label>
             <input
               id="code"
-              name="code"
-              defaultValue={dv(init.code)}
-              className={inputCls}
+              value={init.code ? String(init.code) : "Código gerado automaticamente"}
+              readOnly
+              disabled
+              className={`${inputCls} cursor-not-allowed bg-zinc-100 text-zinc-500 dark:bg-zinc-800`}
             />
-            {renderError("code")}
           </div>
           <div className="flex flex-col gap-1">
             <label htmlFor="property_type" className="text-sm font-medium">

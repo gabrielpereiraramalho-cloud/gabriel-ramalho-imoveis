@@ -179,7 +179,7 @@ export type Database = {
         };
         Insert: {
           id?: string;
-          code: string;
+          code?: string; // gerado pelo banco (next_property_code)
           title: string;
           slug: string;
           description?: string | null;

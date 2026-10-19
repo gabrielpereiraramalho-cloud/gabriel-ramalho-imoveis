@@ -68,21 +68,16 @@ async function resolveLocation(
   return { city_id, neighborhood_id };
 }
 
-/** Verifica duplicidade de código/slug (opcionalmente ignorando um id). */
+/**
+ * Verifica duplicidade de slug (opcionalmente ignorando um id). O código
+ * (RN-xxx) é gerado pelo banco via sequence e é imutável — não passa por aqui.
+ */
 async function findDuplicates(
   supabase: Supabase,
-  code: string,
   slug: string,
   excludeId?: string,
 ): Promise<Record<string, string> | null> {
   const fieldErrors: Record<string, string> = {};
-
-  let codeQuery = supabase.from("properties").select("id").eq("code", code);
-  if (excludeId) codeQuery = codeQuery.neq("id", excludeId);
-  const { data: byCode } = await codeQuery.limit(1);
-  if (byCode && byCode.length > 0) {
-    fieldErrors.code = "Já existe um imóvel com este código.";
-  }
 
   let slugQuery = supabase.from("properties").select("id").eq("slug", slug);
   if (excludeId) slugQuery = slugQuery.neq("id", excludeId);
@@ -135,7 +130,8 @@ export async function createProperty(
 
   const supabase = await createClient();
 
-  const duplicates = await findDuplicates(supabase, values.code, values.slug);
+  // Código NÃO é enviado: o banco gera RN-xxx (default next_property_code()).
+  const duplicates = await findDuplicates(supabase, values.slug);
   if (duplicates) {
     return { error: "Corrija os campos destacados.", fieldErrors: duplicates };
   }
@@ -182,12 +178,8 @@ export async function updateProperty(
 
   const supabase = await createClient();
 
-  const duplicates = await findDuplicates(
-    supabase,
-    values.code,
-    values.slug,
-    id,
-  );
+  // Código é imutável após a criação: não é lido do form nem atualizado.
+  const duplicates = await findDuplicates(supabase, values.slug, id);
   if (duplicates) {
     return { error: "Corrija os campos destacados.", fieldErrors: duplicates };
   }

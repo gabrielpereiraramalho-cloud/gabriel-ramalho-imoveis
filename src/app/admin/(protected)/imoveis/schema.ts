@@ -132,7 +132,6 @@ export function parsePropertyForm(formData: FormData): ParsedProperty {
   };
 
   // Identificação
-  const code = str("code");
   const title = str("title");
   const slugRaw = str("slug");
   const property_type = str("property_type");
@@ -140,7 +139,6 @@ export function parsePropertyForm(formData: FormData): ParsedProperty {
   const statusRaw = str("status") || "available";
   const solarRaw = str("solar_position");
 
-  if (!code) fieldErrors.code = "Código é obrigatório.";
   if (!title) fieldErrors.title = "Título é obrigatório.";
   if (!property_type)
     fieldErrors.property_type = "Tipo do imóvel é obrigatório.";
@@ -159,7 +157,6 @@ export function parsePropertyForm(formData: FormData): ParsedProperty {
   }
 
   const values: TablesInsert<"properties"> = {
-    code,
     title,
     slug,
     property_type,
